@@ -124,7 +124,7 @@
 {
     position = aPosition;
 
-    if (layer)
+    if (layer && !isnan(aPosition.x) && !isnan(aPosition.y))
         [layer setPosition:aPosition animated:animated];
 }
 
