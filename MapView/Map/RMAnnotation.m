@@ -74,7 +74,7 @@
         return nil;
 
     self.mapView      = aMapView;
-    self.coordinate   = aCoordinate;
+    
     self.title        = aTitle;
     self.subtitle     = nil;
     self.userInfo     = nil;
@@ -84,6 +84,8 @@
     self.annotationIcon    = nil;
     self.badgeIcon         = nil;
     self.anchorPoint       = CGPointZero;
+    self.position          = CGPointZero;
+    self.projectedLocation = RMProjectedPointMake(0,0);
     self.hasBoundingBox    = NO;
     self.enabled           = YES;
     self.clusteringEnabled = YES;
@@ -91,6 +93,8 @@
     self.isUserLocationAnnotation = NO;
 
     layer = nil;
+    
+    self.coordinate   = aCoordinate;
 
     return self;
 }
