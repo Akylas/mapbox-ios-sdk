@@ -312,7 +312,7 @@
 
     [self setDecelerationMode:RMMapDecelerationFast];
 
-    self.showLogoBug = YES;
+//    self.showLogoBug = YES;
 
     if (RMPostVersion7)
     {
