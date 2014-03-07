@@ -121,14 +121,14 @@
         if ([db hadError])
             image = [RMTileImage errorTile];
 
-        [results next];
+        if ([results next]) {
+            NSData *data = [results dataForColumn:@"tile_data"];
 
-        NSData *data = [results dataForColumn:@"tile_data"];
-
-        if ( ! data)
-            image = [RMTileImage errorTile];
-        else
-            image = [UIImage imageWithData:data];
+            if ( ! data)
+                image = [RMTileImage errorTile];
+            else
+                image = [UIImage imageWithData:data];
+        }
 
         [results close];
     }];
