@@ -906,6 +906,8 @@
         .southWest = southWest
     });
     _constrainingBox = RMSphericalTrapeziumIntersection(_tilesConstrainingBox, _userConstrainingBox);
+    _constrainMovementByUser = !(_userConstrainingBox.northEast.latitude == 90.0 && _userConstrainingBox.northEast.longitude == 180.0 && _userConstrainingBox.southWest.latitude == -90.0 && _userConstrainingBox.southWest.longitude == -180.0);
+    _constrainMovement |= _constrainMovementByUser;
     [self updateConstrainingProjectedBounds];
 }
 
