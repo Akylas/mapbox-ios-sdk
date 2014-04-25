@@ -1197,7 +1197,7 @@
 #pragma mark -
 #pragma mark Zoom With Bounds
 
-- (void)zoomWithLatitudeLongitudeBoundsSouthWest:(CLLocationCoordinate2D)southWest northEast:(CLLocationCoordinate2D)northEast animated:(BOOL)animated
+- (void)zoomWithLatitudeLongitudeBoundsSouthWest:(CLLocationCoordinate2D)southWest northEast:(CLLocationCoordinate2D)northEast regionFit:(BOOL)regionFit animated:(BOOL)animated
 {
     if (northEast.latitude == southWest.latitude && northEast.longitude == southWest.longitude) // There are no bounds, probably only one marker.
     {
@@ -1235,8 +1235,10 @@
         // Default is with scale = 2.0 * mercators/pixel
         zoomRect.size.width = self.bounds.size.width * 2.0;
         zoomRect.size.height = self.bounds.size.height * 2.0;
+        
+        BOOL ratioTest = regionFit?((myPoint.x / self.bounds.size.width) < (myPoint.y / self.bounds.size.height)):((myPoint.x / self.bounds.size.width) > (myPoint.y / self.bounds.size.height));
 
-        if ((myPoint.x / self.bounds.size.width) < (myPoint.y / self.bounds.size.height))
+        if (ratioTest)
         {
             if ((myPoint.y / self.bounds.size.height) > 1)
             {
@@ -1259,6 +1261,16 @@
 
         [self setProjectedBounds:zoomRect animated:animated];
     }
+}
+
+- (void)zoomWithLatitudeLongitudeBoundsSouthWest:(CLLocationCoordinate2D)southWest northEast:(CLLocationCoordinate2D)northEast animated:(BOOL)animated
+{
+    [self zoomWithLatitudeLongitudeBoundsSouthWest:southWest northEast:northEast regionFit:YES animated:animated];
+}
+
+- (void)zoomWithLatitudeLongitudeBoundsSouthWest:(CLLocationCoordinate2D)southWest northEast:(CLLocationCoordinate2D)northEast
+{
+    [self zoomWithLatitudeLongitudeBoundsSouthWest:southWest northEast:northEast regionFit:YES animated:YES];
 }
 
 #pragma mark -

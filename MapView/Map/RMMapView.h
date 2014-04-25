@@ -251,11 +251,24 @@ typedef enum : NSUInteger {
 *   @param animated Whether to animate the zoom. */
 - (void)zoomOutToNextNativeZoomAt:(CGPoint)pivot animated:(BOOL)animated;
 
+
+/** Zoom the map to a given latitude and longitude bounds.
+ *   @param southWest The southwest point to zoom to.
+ *   @param northEast The northeast point to zoom to.
+ *   @param regionFit Whether to make sure the region fit in the mapView frame.
+ *   @param animated Whether to animate the zoom. */
+- (void)zoomWithLatitudeLongitudeBoundsSouthWest:(CLLocationCoordinate2D)southWest northEast:(CLLocationCoordinate2D)northEast regionFit:(BOOL)regionFit animated:(BOOL)animated;
+
 /** Zoom the map to a given latitude and longitude bounds. 
 *   @param southWest The southwest point to zoom to. 
 *   @param northEast The northeast point to zoom to. 
 *   @param animated Whether to animate the zoom. */
 - (void)zoomWithLatitudeLongitudeBoundsSouthWest:(CLLocationCoordinate2D)southWest northEast:(CLLocationCoordinate2D)northEast animated:(BOOL)animated;
+
+/** Zoom the map to a given latitude and longitude bounds.
+ *   @param southWest The southwest point to zoom to.
+ *   @param northEast The northeast point to zoom to. */
+- (void)zoomWithLatitudeLongitudeBoundsSouthWest:(CLLocationCoordinate2D)southWest northEast:(CLLocationCoordinate2D)northEast ;
 
 - (float)nextNativeZoomFactor;
 - (float)previousNativeZoomFactor;
