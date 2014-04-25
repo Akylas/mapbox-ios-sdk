@@ -60,8 +60,8 @@
         .southWest = {.latitude = INT_MAX, .longitude = INT_MAX}
     });
 
-    _minZoom = kRMTileSourcesContainerMaxZoom;
-    _maxZoom = kRMTileSourcesContainerMinZoom;
+    _minZoom = kRMTileSourcesContainerMinZoom;
+    _maxZoom = kRMTileSourcesContainerMaxZoom;
     _tileSideLength = 0;
 
     return self;
@@ -202,8 +202,8 @@
 
     // minZoom and maxZoom are the min and max values of all tile sources, so that individual tilesources
     // could have a smaller zoom level range
-    self.minZoom = MIN(_minZoom, [tileSource minZoom]);
-    self.maxZoom = MAX(_maxZoom, [tileSource maxZoom]);
+    self.minZoom = MAX(_minZoom, [tileSource minZoom]);
+    self.maxZoom = MIN(_maxZoom, [tileSource maxZoom]);
 
     if (_tileSideLength == 0)
     {
@@ -341,8 +341,8 @@
         .southWest = {.latitude = INT_MAX, .longitude = INT_MAX}
     });
 
-    _minZoom = kRMTileSourcesContainerMaxZoom;
-    _maxZoom = kRMTileSourcesContainerMinZoom;
+    _minZoom = kRMTileSourcesContainerMinZoom;
+    _maxZoom = kRMTileSourcesContainerMaxZoom;
     _tileSideLength = 0;
 
     [_tileSourcesLock unlock];
