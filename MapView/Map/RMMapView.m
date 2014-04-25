@@ -304,14 +304,17 @@
     {
         [self setBackgroundView:nil];
     }
+    
+    if (newTilesource) {
+        if (initialTileSourceMinZoomLevel < newTilesource.minZoom) initialTileSourceMinZoomLevel = newTilesource.minZoom;
+        if (initialTileSourceMaxZoomLevel > newTilesource.maxZoom) initialTileSourceMaxZoomLevel = newTilesource.maxZoom;
+        [self setTileSourcesMinZoom:initialTileSourceMinZoomLevel];
+        [self setTileSourcesMaxZoom:initialTileSourceMaxZoomLevel];
+        [self setTileSourcesZoom:initialTileSourceZoomLevel];
+        
+        [self setTileSource:newTilesource];
+    }
 
-    if (initialTileSourceMinZoomLevel < newTilesource.minZoom) initialTileSourceMinZoomLevel = newTilesource.minZoom;
-    if (initialTileSourceMaxZoomLevel > newTilesource.maxZoom) initialTileSourceMaxZoomLevel = newTilesource.maxZoom;
-    [self setTileSourcesMinZoom:initialTileSourceMinZoomLevel];
-    [self setTileSourcesMaxZoom:initialTileSourceMaxZoomLevel];
-    [self setTileSourcesZoom:initialTileSourceZoomLevel];
-
-    [self setTileSource:newTilesource];
     [self setCenterCoordinate:initialCenterCoordinate animated:NO];
 
     [self setDecelerationMode:RMMapDecelerationFast];
@@ -359,7 +362,7 @@
 
 - (id)initWithFrame:(CGRect)frame
 {
-    return [self initWithFrame:frame andTilesource:[RMMapboxSource new]];
+    return [self initWithFrame:frame andTilesource:nil];
 }
 
 - (id)initWithFrame:(CGRect)frame andTilesource:(id <RMTileSource>)newTilesource
@@ -381,16 +384,14 @@
        minZoomLevel:(float)minZoomLevel
     backgroundImage:(UIImage *)backgroundImage
 {
-    if (!newTilesource || !(self = [super initWithFrame:frame]))
-        return nil;
-
-    [self performInitializationWithTilesource:newTilesource
-                             centerCoordinate:initialCenterCoordinate
-                                    zoomLevel:initialZoomLevel
-                                 maxZoomLevel:maxZoomLevel
-                                 minZoomLevel:minZoomLevel
-                              backgroundImage:backgroundImage];
-
+    if (self = [super initWithFrame:frame]) {
+        [self performInitializationWithTilesource:newTilesource
+                                 centerCoordinate:initialCenterCoordinate
+                                        zoomLevel:initialZoomLevel
+                                     maxZoomLevel:maxZoomLevel
+                                     minZoomLevel:minZoomLevel
+                                  backgroundImage:backgroundImage];
+    }
     return self;
 }
 
