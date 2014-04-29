@@ -218,6 +218,9 @@
     BOOL _rotateAtMinZoom;
     
     float _animationZoomFactor;
+    
+    BOOL _aboutToStartZoomAnimation;
+    BOOL _inFakeZoomAnimation;
 }
 
 @synthesize decelerationMode = _decelerationMode;
@@ -278,6 +281,8 @@
 
     _orderMarkersByYPosition = YES;
     _orderClusterMarkersAboveOthers = YES;
+    
+    _aboutToStartZoomAnimation = _inFakeZoomAnimation = NO;
 
     _annotations = [NSMutableSet new];
     _visibleAnnotations = [NSMutableSet new];
@@ -1043,8 +1048,30 @@
                                  (boundsRect.size.width / _metersPerPixel) / zoomScale,
                                  (boundsRect.size.height / _metersPerPixel) / zoomScale);
     float newZoom = log2f(zoomScale);
-    _animationZoomFactor = exp2f(newZoom - [self zoom]);
-    [_mapScrollView zoomToRect:zoomRect animated:animated];
+    _animationZoomFactor = animated?exp2f(newZoom - [self zoom])*2:0;
+    _aboutToStartZoomAnimation = animated;
+    [self zoomToRect:zoomRect duration:[self animationDuration]];
+}
+
+-(void)fakeZoomAnimationDidStop:(NSString *)animationID finished:(NSNumber *)finished context:(void *)context
+{
+    _inFakeZoomAnimation = NO;
+    [self scrollViewDidEndZooming:_mapScrollView withView:_mapScrollView atScale:1.0f];
+}
+
+- (void)zoomToRect:(CGRect)rect duration:(NSTimeInterval)duration
+{
+    _inFakeZoomAnimation = YES;
+    if (duration > 0.0f) {
+        [UIView beginAnimations:nil context:NULL];
+        [UIView setAnimationBeginsFromCurrentState:YES];
+        [UIView setAnimationDuration:duration];
+        [UIView setAnimationDelegate:self];
+        [UIView setAnimationDidStopSelector:@selector(fakeZoomAnimationDidStop:finished:context:)];
+    }
+    [_mapScrollView zoomToRect:rect animated:NO];
+    if (duration > 0.0f)
+        [UIView commitAnimations];
 }
 
 - (BOOL)shouldZoomToTargetZoom:(float)targetZoom withZoomFactor:(float)zoomFactor
@@ -1466,6 +1493,7 @@
 
 - (void)scrollViewDidZoom:(UIScrollView *)scrollView
 {
+    if (_inFakeZoomAnimation) return;
     BOOL wasUserAction = (scrollView.pinchGestureRecognizer.state == UIGestureRecognizerStateChanged);
 
     [self registerZoomEventByUser:wasUserAction];
@@ -1560,7 +1588,7 @@
         return;
 
     // The first offset during zooming out (animated) is always garbage
-    if (_mapScrollViewIsZooming == YES &&
+    if ( (_inFakeZoomAnimation || _mapScrollViewIsZooming == YES) &&
         _mapScrollView.zooming == NO &&
         _lastContentSize.width > _mapScrollView.contentSize.width &&
         (newContentOffset.y - oldContentOffset.y) == 0.0)
@@ -1598,7 +1626,7 @@
         }
         else
         {
-            if (_mapScrollViewIsZooming)
+            if (_aboutToStartZoomAnimation || _mapScrollViewIsZooming)
                 [self correctPositionOfAllAnnotationsIncludingInvisibles:NO animated:YES];
             else
                 [self correctPositionOfAllAnnotations];
@@ -1606,7 +1634,7 @@
     }
     else
     {
-        [self correctPositionOfAllAnnotationsIncludingInvisibles:NO animated:(_mapScrollViewIsZooming && !_mapScrollView.zooming)];
+        [self correctPositionOfAllAnnotationsIncludingInvisibles:NO animated:_aboutToStartZoomAnimation || (_mapScrollViewIsZooming && !_mapScrollView.zooming)];
 
         if (_currentAnnotation && ! [_currentAnnotation isKindOfClass:[RMMarker class]])
         {
@@ -2902,15 +2930,25 @@
 {
     RMProjectedRect planetBounds = _projection.planetBounds;
 	RMProjectedPoint normalizedProjectedPoint;
+    
 	normalizedProjectedPoint.x = annotation.projectedLocation.x + fabs(planetBounds.origin.x);
 	normalizedProjectedPoint.y = annotation.projectedLocation.y + fabs(planetBounds.origin.y);
+    
+    float contentX = _mapScrollView.contentOffset.x;
+    float contentY = _mapScrollView.contentOffset.y;
+    float contentHeight = _mapScrollView.contentSize.height;
 
-    CGPoint newPosition = CGPointMake((normalizedProjectedPoint.x / _metersPerPixel) - _mapScrollView.contentOffset.x,
-                                      _mapScrollView.contentSize.height - (normalizedProjectedPoint.y / _metersPerPixel) - _mapScrollView.contentOffset.y);
+    CGPoint newPosition = CGPointMake((normalizedProjectedPoint.x / _metersPerPixel) - contentX,
+                                      contentHeight - (normalizedProjectedPoint.y / _metersPerPixel) - contentY);
 
 //    RMLog(@"Change annotation at {%f,%f} in mapView {%f,%f}", annotation.position.x, annotation.position.y, mapScrollView.contentSize.width, mapScrollView.contentSize.height);
 
     [annotation setPosition:newPosition animated:animated];
+}
+
+-(float)animationDuration
+{
+    return ((_animationZoomFactor > 1)?_animationZoomFactor:1/_animationZoomFactor) * 0.15;
 }
 
 - (void)correctPositionOfAllAnnotationsIncludingInvisibles:(BOOL)correctAllAnnotations animated:(BOOL)animated
@@ -2922,7 +2960,8 @@
     if (animated && !_mapScrollView.isZooming)
     {
         [CATransaction setAnimationTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut]];
-        [CATransaction setAnimationDuration:((_animationZoomFactor > 1)?_animationZoomFactor:1/_animationZoomFactor) * 0.15];
+        [CATransaction setAnimationDuration:[self animationDuration]];
+        _aboutToStartZoomAnimation = NO;
     }
     else
     {
@@ -3179,7 +3218,7 @@
     {
         [self correctScreenPosition:annotation animated:NO];
 
-        if (annotation.layer == nil && [annotation isAnnotationOnScreen] && _delegateHasLayerForAnnotation)
+        if (annotation.layer == nil && (!annotation.hasBoundingBox || [annotation isAnnotationOnScreen]) && _delegateHasLayerForAnnotation)
             annotation.layer = [_delegate mapView:self layerForAnnotation:annotation];
 
         if (annotation.layer)

@@ -159,9 +159,10 @@
         if (animated)
         {
             CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:@"path"];
-            animation.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+            animation.timingFunction = [CATransaction animationTimingFunction];
             animation.repeatCount = 0;
             animation.autoreverses = NO;
+            animation.duration = [CATransaction animationDuration];
             animation.fromValue = (id) shapeLayer.path;
             animation.toValue = (id) scaledPath.CGPath;
             [shapeLayer addAnimation:animation forKey:@"animatePath"];
