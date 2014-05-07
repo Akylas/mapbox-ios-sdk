@@ -1277,22 +1277,25 @@
         zoomRect.size.width = self.bounds.size.width * 2.0;
         zoomRect.size.height = self.bounds.size.height * 2.0;
         
-        BOOL ratioTest = regionFit?((myPoint.x / self.bounds.size.width) < (myPoint.y / self.bounds.size.height)):((myPoint.x / self.bounds.size.width) > (myPoint.y / self.bounds.size.height));
+        float ratioX = myPoint.x / self.bounds.size.width;
+        float ratioY = myPoint.y / self.bounds.size.height;
+        
+        BOOL ratioTest = regionFit?(ratioX < ratioY):(ratioX > ratioY);
 
         if (ratioTest)
         {
-            if ((myPoint.y / self.bounds.size.height) > 1)
+            if (ratioY > 1)
             {
-                zoomRect.size.width = self.bounds.size.width * (myPoint.y / self.bounds.size.height);
-                zoomRect.size.height = self.bounds.size.height * (myPoint.y / self.bounds.size.height);
+                zoomRect.size.width = self.bounds.size.width * ratioY;
+                zoomRect.size.height = self.bounds.size.height * ratioY;
             }
         }
         else
         {
-            if ((myPoint.x / self.bounds.size.width) > 1)
+            if (ratioX > 1)
             {
-                zoomRect.size.width = self.bounds.size.width * (myPoint.x / self.bounds.size.width);
-                zoomRect.size.height = self.bounds.size.height * (myPoint.x / self.bounds.size.width);
+                zoomRect.size.width = self.bounds.size.width * ratioX;
+                zoomRect.size.height = self.bounds.size.height * ratioX;
             }
         }
 
