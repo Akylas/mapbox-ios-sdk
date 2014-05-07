@@ -1518,7 +1518,6 @@
 
 - (void)scrollViewDidZoom:(UIScrollView *)scrollView
 {
-    if (_inFakeZoomAnimation) return;
     BOOL wasUserAction = (scrollView.pinchGestureRecognizer.state == UIGestureRecognizerStateChanged);
 
     [self registerZoomEventByUser:wasUserAction];
