@@ -1635,7 +1635,7 @@
     _zoom = (_zoom > _maxZoom) ? _maxZoom : _zoom;
     _zoom = (_zoom < _minZoom) ? _minZoom : _zoom;
 
-    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(correctPositionOfAllAnnotations) object:nil];
+//    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(correctPositionOfAllAnnotations) object:nil];
 
     if (_zoom == _lastZoom)
     {
@@ -1646,8 +1646,10 @@
 
         if (fabsf(_accumulatedDelta.x) < kZoomRectPixelBuffer && fabsf(_accumulatedDelta.y) < kZoomRectPixelBuffer)
         {
+            
             [_overlayView moveLayersBy:_accumulatedDelta];
-            [self performSelector:@selector(correctPositionOfAllAnnotations) withObject:nil afterDelay:0.1];
+            [self correctPositionOfAllAnnotations];
+//            [self performSelector:@selector(correctPositionOfAllAnnotations) withObject:nil afterDelay:0.1];
         }
         else
         {
