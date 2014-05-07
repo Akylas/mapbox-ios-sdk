@@ -914,9 +914,13 @@
         .southWest = southWest
     });
     _constrainingBox = RMSphericalTrapeziumIntersection(_tilesConstrainingBox, _userConstrainingBox);
-    _constrainMovementByUser = !(_userConstrainingBox.northEast.latitude == 90.0 && _userConstrainingBox.northEast.longitude == 180.0 && _userConstrainingBox.southWest.latitude == -90.0 && _userConstrainingBox.southWest.longitude == -180.0);
-    _constrainMovement |= _constrainMovementByUser;
+    BOOL fullMapView = (_userConstrainingBox.northEast.latitude == 90.0 && _userConstrainingBox.northEast.longitude == 180.0 && _userConstrainingBox.southWest.latitude == -90.0 && _userConstrainingBox.southWest.longitude == -180.0);
+    _constrainMovementByUser = _constrainMovement =!fullMapView;
     [self updateConstrainingProjectedBounds];
+    RMSphericalTrapezium current = [self latitudeLongitudeBoundingBoxFor:[self bounds]];
+    if (!RMSphericalTrapeziumContains(_constrainingBox, current)) {
+        [self zoomWithLatitudeLongitudeBoundsSouthWest:_constrainingBox.southWest northEast:_constrainingBox.northEast animated:YES];
+    }
 }
 
 - (void)setTileSourcesConstraintsFromLatitudeLongitudeBoundingBox:(RMSphericalTrapezium)bounds
@@ -926,6 +930,10 @@
     _tilesConstrainingBox = bounds;
     _constrainingBox = RMSphericalTrapeziumIntersection(_tilesConstrainingBox, _userConstrainingBox);
     [self updateConstrainingProjectedBounds];
+    RMSphericalTrapezium current = [self latitudeLongitudeBoundingBoxFor:[self bounds]];
+    if (!RMSphericalTrapeziumContains(_constrainingBox, current)) {
+        [self zoomWithLatitudeLongitudeBoundsSouthWest:_constrainingBox.southWest northEast:_constrainingBox.northEast animated:YES];
+    }
 }
 
 #pragma mark -
