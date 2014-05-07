@@ -1048,22 +1048,36 @@
                                  (boundsRect.size.width / _metersPerPixel) / zoomScale,
                                  (boundsRect.size.height / _metersPerPixel) / zoomScale);
     float newZoom = log2f(zoomScale);
-    _animationZoomFactor = animated?exp2f(newZoom - [self zoom])*2:0;
+    float currentZoom = [self zoom];
+    _animationZoomFactor = animated?exp2f(newZoom - currentZoom)*2:0;
     _aboutToStartZoomAnimation = animated;
     [self zoomToRect:zoomRect duration:[self animationDuration]];
 }
 
 -(void)fakeZoomAnimationDidStop:(NSString *)animationID finished:(NSNumber *)finished context:(void *)context
 {
-    _inFakeZoomAnimation = NO;
-    [self scrollViewDidEndZooming:_mapScrollView withView:_mapScrollView atScale:1.0f];
+    if ([animationID isEqualToString:@"fakezoom"]) {
+        _inFakeZoomAnimation = NO;
+        [self scrollViewDidEndZooming:_mapScrollView withView:_mapScrollView atScale:1.0f];
+    }
 }
 
 - (void)zoomToRect:(CGRect)rect duration:(NSTimeInterval)duration
 {
     _inFakeZoomAnimation = YES;
+    [UIView animateWithDuration:duration delay:0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
+        [_mapScrollView zoomToRect:rect animated:NO];
+    } completion:^(BOOL finished) {
+        _inFakeZoomAnimation = _aboutToStartZoomAnimation = NO;
+        [self scrollViewDidEndZooming:_mapScrollView withView:_tiledLayersSuperview atScale:1.0f];
+    }];
+}
+
+- (void)scrollToRect:(CGRect)rect duration:(NSTimeInterval)duration
+{
+    _inFakeZoomAnimation = YES;
     if (duration > 0.0f) {
-        [UIView beginAnimations:nil context:NULL];
+        [UIView beginAnimations:@"fakezoom" context:NULL];
         [UIView setAnimationBeginsFromCurrentState:YES];
         [UIView setAnimationDuration:duration];
         [UIView setAnimationDelegate:self];
