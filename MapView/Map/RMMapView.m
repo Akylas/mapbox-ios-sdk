@@ -1398,8 +1398,8 @@
 
     [_mapScrollView addObserver:self forKeyPath:@"contentOffset" options:(NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld) context:NULL];
     _mapScrollView.mapScrollViewDelegate = self;
-
-    _mapScrollView.zoomScale = exp2f([self zoom]);
+    
+    [self setZoomScale:[self zoom]];
     [self setDecelerationMode:_decelerationMode];
 
     if (_backgroundView)
@@ -1443,6 +1443,12 @@
 
     [_visibleAnnotations removeAllObjects];
     [self correctPositionOfAllAnnotations];
+}
+-(void)setZoomScale:(CGFloat)zoom {
+    CGSize size = _mapScrollView.contentSize;
+    if (size.width != 0 && size.height != 0) {
+        _mapScrollView.zoomScale = exp2f(zoom);
+    }
 }
 
 - (UIView *)viewForZoomingInScrollView:(UIScrollView *)scrollView
@@ -2236,6 +2242,10 @@
     _projection = [_tileSourcesContainer projection];
 
     _mercatorToTileProjection = [_tileSourcesContainer mercatorToTileProjection];
+    
+    if (_lastContentSize.width == 0 || _lastContentSize.height == 0) {
+        
+    }
 
     [self setTileSourcesConstraintsFromLatitudeLongitudeBoundingBox:[_tileSourcesContainer latitudeLongitudeBoundingBox]];
 
@@ -2505,6 +2515,7 @@
 {
     float boundingDimension = fmaxf(self.bounds.size.width, self.bounds.size.height);
     float tileSideLength    = _tileSourcesContainer.tileSideLength;
+    if (tileSideLength == 0) return;
     float clampedMinZoom    = log2(boundingDimension / tileSideLength);
 
     if (newMinZoom < clampedMinZoom)
@@ -2579,8 +2590,8 @@
     _zoom = (_zoom < _minZoom) ? _minZoom : _zoom;
 
 //    RMLog(@"New zoom:%f", _zoom);
-
-    _mapScrollView.zoomScale = exp2f(_zoom);
+    
+    [self setZoomScale:_zoom];
 
     [self completeZoomEventAfterDelay:0];
 }
