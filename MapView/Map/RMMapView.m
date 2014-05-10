@@ -1060,7 +1060,7 @@
     float newZoomFactor = _mapScrollView.bounds.size.width /(zoomRect.size.width * zoomScale);
 //    float newZoom = log2f(newZoomFactor) + currentZoom;
     
-    _animationZoomFactor = animated?MIN(newZoomFactor, 2):0;
+    _animationZoomFactor = animated?newZoomFactor:0;
     _aboutToStartZoomAnimation = animated;
     [self zoomToRect:zoomRect duration:[self animationDuration]];
 }
@@ -2977,7 +2977,7 @@
 
 -(float)animationDuration
 {
-    return ((_animationZoomFactor > 1)?_animationZoomFactor:1/_animationZoomFactor) * 0.15;
+    return ((_animationZoomFactor > 1)?MIN(_animationZoomFactor,2):MIN(1/_animationZoomFactor,2)) * 0.15;
 }
 
 - (void)correctPositionOfAllAnnotationsIncludingInvisibles:(BOOL)correctAllAnnotations animated:(BOOL)animated
