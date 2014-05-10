@@ -118,7 +118,7 @@
                                    [NSNumber numberWithUnsignedLongLong:x],
                                    [NSNumber numberWithUnsignedLongLong:y]];
 
-        if ([db hadError])
+        if ([self dbHadError:db])
             image = [RMTileImage errorTile];
 
         if ([results next]) {
@@ -179,7 +179,7 @@
     {
         FMResultSet *results = [db executeQuery:@"select min(zoom_level) from tiles"];
 
-        if ([db hadError])
+        if ([self dbHadError:db])
             minZoom = kMBTilesDefaultMinTileZoom;
 
         [results next];
@@ -192,6 +192,14 @@
     return minZoom;
 }
 
+-(BOOL)dbHadError:(FMDatabase *)db{
+    BOOL result = [db hadError];
+    if (result) {
+        NSLog(@"DB error %@", [db lastErrorMessage]);
+    }
+    return result;
+}
+
 - (float)maxZoom
 {
     __block double maxZoom;
@@ -200,7 +208,7 @@
     {
         FMResultSet *results = [db executeQuery:@"select max(zoom_level) from tiles"];
 
-        if ([db hadError])
+        if ([self dbHadError:db])
             maxZoom = kMBTilesDefaultMaxTileZoom;
 
         [results next];
@@ -262,7 +270,7 @@
     {
         FMResultSet *results = [db executeQuery:@"select value from metadata where name = 'legend'"];
 
-        if ([db hadError])
+        if ([self dbHadError:db])
             legend = nil;
 
         [results next];
@@ -282,6 +290,7 @@
     [queue inDatabase:^(FMDatabase *db)
     {
         FMResultSet *results = [db executeQuery:@"select value from metadata where name = 'center'"];
+        [self dbHadError:db];
 
         [results next];
 
@@ -302,6 +311,7 @@
     [queue inDatabase:^(FMDatabase *db)
     {
         FMResultSet *results = [db executeQuery:@"select value from metadata where name = 'center'"];
+        [self dbHadError:db];
 
         [results next];
 
@@ -344,7 +354,7 @@
     {
         FMResultSet *results = [db executeQuery:@"select value from metadata where name = 'name'"];
 
-        if ([db hadError])
+        if ([self dbHadError:db])
             shortName = nil;
 
         [results next];
@@ -365,7 +375,7 @@
     {
         FMResultSet *results = [db executeQuery:@"select value from metadata where name = 'description'"];
 
-        if ([db hadError])
+        if ([self dbHadError:db])
             description = nil;
 
         [results next];
@@ -386,7 +396,7 @@
     {
         FMResultSet *results = [db executeQuery:@"select value from metadata where name = 'attribution'"];
 
-        if ([db hadError])
+        if ([self dbHadError:db])
             attribution = @"Unknown MBTiles attribution";
 
         [results next];
