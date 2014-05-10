@@ -3537,13 +3537,16 @@
     if ( ! _showsUserLocation || _mapScrollView.isDragging || ! newLocation || ! CLLocationCoordinate2DIsValid(newLocation.coordinate))
         return;
 
-    if ([newLocation distanceFromLocation:oldLocation])
+    if (oldLocation && ![newLocation distanceFromLocation:oldLocation])
     {
-        self.userLocation.location = newLocation;
-
-        if (_delegateHasDidUpdateUserLocation)
-            [_delegate mapView:self didUpdateUserLocation:self.userLocation];
+        return;
     }
+    
+    self.userLocation.location = newLocation;
+    
+    if (_delegateHasDidUpdateUserLocation)
+        [_delegate mapView:self didUpdateUserLocation:self.userLocation];
+
 
     if (self.userTrackingMode != RMUserTrackingModeNone)
     {
