@@ -1051,13 +1051,16 @@
 	normalizedProjectedPoint.y = boundsRect.origin.y + fabs(planetBounds.origin.y);
 
     float zoomScale = _mapScrollView.zoomScale;
+    
     CGRect zoomRect = CGRectMake((normalizedProjectedPoint.x / _metersPerPixel) / zoomScale,
                                  ((planetBounds.size.height - normalizedProjectedPoint.y - boundsRect.size.height) / _metersPerPixel) / zoomScale,
                                  (boundsRect.size.width / _metersPerPixel) / zoomScale,
                                  (boundsRect.size.height / _metersPerPixel) / zoomScale);
-    float newZoom = log2f(zoomScale);
     float currentZoom = [self zoom];
-    _animationZoomFactor = animated?exp2f(newZoom - currentZoom)*2:0;
+    float newZoomFactor = _mapScrollView.bounds.size.width /(zoomRect.size.width * zoomScale);
+//    float newZoom = log2f(newZoomFactor) + currentZoom;
+    
+    _animationZoomFactor = animated?MIN(newZoomFactor, 2):0;
     _aboutToStartZoomAnimation = animated;
     [self zoomToRect:zoomRect duration:[self animationDuration]];
 }
