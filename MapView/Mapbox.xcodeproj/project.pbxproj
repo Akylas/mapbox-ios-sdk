@@ -1084,7 +1084,9 @@
 					"\"$(SRCROOT)/../Proj4\"",
 				);
 				OTHER_LDFLAGS = "-ObjC";
+				PRIVATE_HEADERS_FOLDER_PATH = include;
 				PRODUCT_NAME = Mapbox;
+				PUBLIC_HEADERS_FOLDER_PATH = include;
 				RUN_CLANG_STATIC_ANALYZER = NO;
 			};
 			name = Debug;
@@ -1107,7 +1109,9 @@
 					"\"$(SRCROOT)/../Proj4\"",
 				);
 				OTHER_LDFLAGS = "-ObjC";
+				PRIVATE_HEADERS_FOLDER_PATH = include;
 				PRODUCT_NAME = Mapbox;
+				PUBLIC_HEADERS_FOLDER_PATH = include;
 				ZERO_LINK = NO;
 			};
 			name = Release;
