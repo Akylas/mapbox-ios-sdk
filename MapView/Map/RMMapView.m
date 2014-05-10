@@ -244,6 +244,7 @@
 @synthesize debugTiles = _debugTiles;
 @synthesize hideAttribution = _hideAttribution;
 @synthesize showLogoBug = _showLogoBug;
+@synthesize constraintRegionFit = _constraintRegionFit;
 
 #pragma mark -
 #pragma mark Initialization
@@ -278,6 +279,8 @@
     _adjustTilesForRetinaDisplay = NO;
     _missingTilesDepth = 1;
     _debugTiles = NO;
+    
+    _constraintRegionFit = YES;
 
     _orderMarkersByYPosition = YES;
     _orderClusterMarkersAboveOthers = YES;
@@ -914,6 +917,11 @@
 
 - (void)setConstraintsSouthWest:(CLLocationCoordinate2D)southWest northEast:(CLLocationCoordinate2D)northEast
 {
+    [self setConstraintsSouthWest:southWest northEast:northEast regionFit:_constraintRegionFit];
+}
+
+- (void)setConstraintsSouthWest:(CLLocationCoordinate2D)southWest northEast:(CLLocationCoordinate2D)northEast regionFit:(BOOL)regionFit
+{
     _userConstrainingBox = ((RMSphericalTrapezium) {
         .northEast = northEast,
         .southWest = southWest
@@ -924,7 +932,7 @@
     [self updateConstrainingProjectedBounds];
     RMSphericalTrapezium current = [self latitudeLongitudeBoundingBoxFor:[self bounds]];
     if (!RMSphericalTrapeziumContains(_constrainingBox, current)) {
-        [self zoomWithLatitudeLongitudeBoundsSouthWest:_constrainingBox.southWest northEast:_constrainingBox.northEast animated:YES];
+        [self zoomWithLatitudeLongitudeBoundsSouthWest:_constrainingBox.southWest northEast:_constrainingBox.northEast regionFit:regionFit animated:YES];
     }
 }
 
@@ -937,7 +945,7 @@
     [self updateConstrainingProjectedBounds];
     RMSphericalTrapezium current = [self latitudeLongitudeBoundingBoxFor:[self bounds]];
     if (!RMSphericalTrapeziumContains(_constrainingBox, current)) {
-        [self zoomWithLatitudeLongitudeBoundsSouthWest:_constrainingBox.southWest northEast:_constrainingBox.northEast animated:YES];
+        [self zoomWithLatitudeLongitudeBoundsSouthWest:_constrainingBox.southWest northEast:_constrainingBox.northEast regionFit:_constraintRegionFit animated:YES];
     }
 }
 
@@ -1325,7 +1333,7 @@
 
 - (void)zoomWithLatitudeLongitudeBoundsSouthWest:(CLLocationCoordinate2D)southWest northEast:(CLLocationCoordinate2D)northEast animated:(BOOL)animated
 {
-    [self zoomWithLatitudeLongitudeBoundsSouthWest:southWest northEast:northEast regionFit:YES animated:animated];
+    [self zoomWithLatitudeLongitudeBoundsSouthWest:southWest northEast:northEast regionFit:_constraintRegionFit animated:animated];
 }
 
 - (void)zoomWithLatitudeLongitudeBoundsSouthWest:(CLLocationCoordinate2D)southWest northEast:(CLLocationCoordinate2D)northEast
@@ -1381,6 +1389,7 @@
     _mapScrollView.maximumZoomScale = exp2f([self maxZoom]);
     _mapScrollView.contentOffset = CGPointMake(0.0, 0.0);
     _mapScrollView.clipsToBounds = NO;
+    _mapScrollView.dontUpdateDuringAnimation = NO;
 
     _tiledLayersSuperview = [[UIView alloc] initWithFrame:CGRectMake(0.0, 0.0, contentSize.width, contentSize.height)];
     _tiledLayersSuperview.userInteractionEnabled = NO;
@@ -1395,7 +1404,6 @@
     }
 
     [_mapScrollView addSubview:_tiledLayersSuperview];
-
     _lastZoom = [self zoom];
     _lastContentOffset = _mapScrollView.contentOffset;
     _accumulatedDelta = CGPointMake(0.0, 0.0);
@@ -1628,8 +1636,8 @@
     // The first offset during zooming out (animated) is always garbage
     if ( (_inFakeZoomAnimation || _mapScrollViewIsZooming == YES) &&
         _mapScrollView.zooming == NO &&
-        _lastContentSize.width > _mapScrollView.contentSize.width &&
-        (newContentOffset.y - oldContentOffset.y) == 0.0)
+        ((_lastContentSize.width > _mapScrollView.contentSize.width &&
+        (newContentOffset.y - oldContentOffset.y) == 0.0) || _mapScrollView.dontUpdateDuringAnimation))
     {
         _lastContentOffset = _mapScrollView.contentOffset;
         _lastContentSize = _mapScrollView.contentSize;
@@ -2210,7 +2218,7 @@
 {
     if ( ! [_tileSourcesContainer setTileSources:tileSources])
         return;
-
+    
     RMProjectedPoint centerPoint = [self centerProjectedPoint];
 
     _projection = [_tileSourcesContainer projection];

@@ -269,6 +269,7 @@ typedef enum : NSUInteger {
  *   @param southWest The southwest point to zoom to.
  *   @param northEast The northeast point to zoom to. */
 - (void)zoomWithLatitudeLongitudeBoundsSouthWest:(CLLocationCoordinate2D)southWest northEast:(CLLocationCoordinate2D)northEast ;
+- (void)zoomWithLatitudeLongitudeBoundsSouthWest:(CLLocationCoordinate2D)southWest northEast:(CLLocationCoordinate2D)northEast regionFit:(BOOL)regionFit animated:(BOOL)animated;
 
 - (float)nextNativeZoomFactor;
 - (float)previousNativeZoomFactor;
@@ -294,6 +295,7 @@ typedef enum : NSUInteger {
 *   @param southWest The southwest point to constrain to.
 *   @param northEast The northeast point to constrain to. */
 - (void)setConstraintsSouthWest:(CLLocationCoordinate2D)southWest northEast:(CLLocationCoordinate2D)northEast;
+@property (nonatomic, assign) BOOL constraintRegionFit;
 
 #pragma mark - Snapshots
 
