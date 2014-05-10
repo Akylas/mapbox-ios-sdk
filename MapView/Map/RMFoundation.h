@@ -71,6 +71,13 @@ static inline RMSphericalTrapezium RMSphericalTrapeziumIntersection(RMSphericalT
         }
     });
 }
+
+static inline BOOL RMSphericalTrapeziumContains(RMSphericalTrapezium box1, RMSphericalTrapezium box2){
+     return box2.northEast.latitude <= box1.northEast.latitude &&
+            box2.northEast.longitude <= box1.northEast.longitude &&
+            box2.southWest.latitude >= box1.southWest.latitude &&
+            box2.southWest.longitude >= box1.southWest.longitude;
+}
 #endif
 
 #pragma mark -
@@ -98,6 +105,7 @@ RMProjectedRect RMProjectedRectUnion(RMProjectedRect rect1, RMProjectedRect rect
 
 // Rect intersection
 RMProjectedRect RMProjectedRectIntersection(RMProjectedRect rect1, RMProjectedRect rect2);
+RMProjectedPoint RMProjectedRectCenter();
 
 RMProjectedPoint RMProjectedPointMake(double x, double y);
 RMProjectedRect  RMProjectedRectMake(double x, double y, double width, double height);

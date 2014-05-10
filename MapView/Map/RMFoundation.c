@@ -210,6 +210,11 @@ RMProjectedRect RMProjectedRectIntersection(RMProjectedRect rect1, RMProjectedRe
     return RMProjectedRectMake(minX, minY, maxX - minX, maxY - minY);
 }
 
+RMProjectedPoint RMProjectedRectCenter(RMProjectedRect rect)
+{
+    return RMProjectedPointMake(rect.origin.x + rect.size.width/2, rect.origin.y + rect.size.height/2);
+}
+
 // apparently, this doesn't work well with coordinates on a sphere, but it might be appropriate for a quick estimation
 double RMEuclideanDistanceBetweenProjectedPoints(RMProjectedPoint point1, RMProjectedPoint point2)
 {
