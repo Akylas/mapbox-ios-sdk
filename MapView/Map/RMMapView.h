@@ -38,6 +38,8 @@
 #import "RMMapScrollView.h"
 #import "RMTileSourcesContainer.h"
 
+#define RMSourceChanged @"RMSourceChanged"
+
 @class RMProjection;
 @class RMFractalTileProjection;
 @class RMTileCache;
