@@ -635,7 +635,7 @@
         // needs a scroll view frame in order to calculate _metersPerPixel.
         // See https://github.com/mapbox/mapbox-ios-sdk/issues/270
         //
-        [self performInitializationWithTilesource:[RMMapboxSource new]
+        [self performInitializationWithTilesource:nil
                                  centerCoordinate:CLLocationCoordinate2DMake(kDefaultInitialLatitude, kDefaultInitialLongitude)
                                         zoomLevel:kDefaultInitialZoomLevel
                                      maxZoomLevel:kDefaultMaximumZoomLevel
@@ -3891,8 +3891,10 @@
         return;
 
     _hideAttribution = flag;
-
-    [self layoutSubviews];
+    
+    if (!CGSizeEqualToSize(self.bounds.size, CGSizeZero)) {
+        [self layoutSubviews];
+    }
 }
 
 - (UIViewController *)viewControllerPresentingAttribution
