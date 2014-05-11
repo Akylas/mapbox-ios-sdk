@@ -2218,28 +2218,48 @@
 {
     if ( ! [_tileSourcesContainer setTileSources:tileSources])
         return;
-    
-    RMProjectedPoint centerPoint = [self centerProjectedPoint];
-
-    _projection = [_tileSourcesContainer projection];
-
-    _mercatorToTileProjection = [_tileSourcesContainer mercatorToTileProjection];
-
-    [self setTileSourcesConstraintsFromLatitudeLongitudeBoundingBox:[_tileSourcesContainer latitudeLongitudeBoundingBox]];
-
-    [self setTileSourcesMinZoom:_tileSourcesContainer.minZoom];
-    [self setTileSourcesMaxZoom:_tileSourcesContainer.maxZoom];
-    [self setZoom:[self zoom]]; // setZoom clamps zoom level to min/max limits
 
     // Recreate the map layer
     [self createMapView];
 
-    [self setCenterProjectedPoint:centerPoint animated:NO];
+    [self updateAfterSourceChange];
 }
 
 - (void)addTileSource:(id <RMTileSource>)tileSource
 {
     [self addTileSource:tileSource atIndex:-1];
+}
+
+-(void)updateAfterSourceChange {
+    RMProjectedPoint centerPoint = [self centerProjectedPoint];
+    [_tileSourcesContainer cancelAllDownloads];
+    _projection = [_tileSourcesContainer projection];
+    
+    _mercatorToTileProjection = [_tileSourcesContainer mercatorToTileProjection];
+    
+    if (_lastContentSize.width == 0 || _lastContentSize.height == 0) {
+        
+    }
+    
+    if ([_tileSourcesContainer.tileSources count] == 0)
+    {
+        _constrainMovement = NO;
+    }
+    else
+    {
+        [self setTileSourcesConstraintsFromLatitudeLongitudeBoundingBox:[_tileSourcesContainer latitudeLongitudeBoundingBox]];
+    }
+    
+    [self setTileSourcesMinZoom:_tileSourcesContainer.minZoom];
+    [self setTileSourcesMaxZoom:_tileSourcesContainer.maxZoom];
+    [self setZoom:[self zoom]]; // setZoom clamps zoom level to min/max limits
+    
+    
+    [self setCenterProjectedPoint:centerPoint animated:NO];
+    for (RMMapTiledLayerView *tiledLayerView in _tiledLayersSuperview.subviews)
+    {
+        [tiledLayerView.layer setNeedsDisplay];
+    }
 }
 
 - (void)addTileSource:(id<RMTileSource>)newTileSource atIndex:(NSUInteger)index
@@ -2249,22 +2269,6 @@
 
     if ( ! [_tileSourcesContainer addTileSource:newTileSource atIndex:index])
         return;
-
-    RMProjectedPoint centerPoint = [self centerProjectedPoint];
-
-    _projection = [_tileSourcesContainer projection];
-
-    _mercatorToTileProjection = [_tileSourcesContainer mercatorToTileProjection];
-    
-    if (_lastContentSize.width == 0 || _lastContentSize.height == 0) {
-        
-    }
-
-    [self setTileSourcesConstraintsFromLatitudeLongitudeBoundingBox:[_tileSourcesContainer latitudeLongitudeBoundingBox]];
-
-    [self setTileSourcesMinZoom:_tileSourcesContainer.minZoom];
-    [self setTileSourcesMaxZoom:_tileSourcesContainer.maxZoom];
-    [self setZoom:[self zoom]]; // setZoom clamps zoom level to min/max limits
 
     // Recreate the map layer
     NSUInteger tileSourcesContainerSize = [[_tileSourcesContainer tileSources] count];
@@ -2287,24 +2291,13 @@
         else
             [_tiledLayersSuperview insertSubview:tiledLayerView atIndex:index];
     }
-
-    [self setCenterProjectedPoint:centerPoint animated:NO];
+    
+    [self updateAfterSourceChange];
 }
 
 - (void)removeTileSource:(id <RMTileSource>)tileSource
 {
-    RMProjectedPoint centerPoint = [self centerProjectedPoint];
-
     [_tileSourcesContainer removeTileSource:tileSource];
-
-    if ([_tileSourcesContainer.tileSources count] == 0)
-    {
-        _constrainMovement = NO;
-    }
-    else
-    {
-        [self setTileSourcesConstraintsFromLatitudeLongitudeBoundingBox:[_tileSourcesContainer latitudeLongitudeBoundingBox]];
-    }
 
     // Remove the map layer
     RMMapTiledLayerView *tileSourceTiledLayerView = nil;
@@ -2321,23 +2314,13 @@
     tileSourceTiledLayerView.layer.contents = nil;
     [tileSourceTiledLayerView removeFromSuperview];  tileSourceTiledLayerView = nil;
 
-    [self setCenterProjectedPoint:centerPoint animated:NO];
+    [self updateAfterSourceChange];
 }
 
 - (void)removeTileSourceAtIndex:(NSUInteger)index
 {
-    RMProjectedPoint centerPoint = [self centerProjectedPoint];
 
     [_tileSourcesContainer removeTileSourceAtIndex:index];
-
-    if ([_tileSourcesContainer.tileSources count] == 0)
-    {
-        _constrainMovement = NO;
-    }
-    else
-    {
-        [self setTileSourcesConstraintsFromLatitudeLongitudeBoundingBox:[_tileSourcesContainer latitudeLongitudeBoundingBox]];
-    }
 
     // Remove the map layer
     RMMapTiledLayerView *tileSourceTiledLayerView = [_tiledLayersSuperview.subviews objectAtIndex:index];
@@ -2345,7 +2328,7 @@
     tileSourceTiledLayerView.layer.contents = nil;
     [tileSourceTiledLayerView removeFromSuperview];  tileSourceTiledLayerView = nil;
 
-    [self setCenterProjectedPoint:centerPoint animated:NO];
+    [self updateAfterSourceChange];
 }
 
 - (void)moveTileSourceAtIndex:(NSUInteger)fromIndex toIndex:(NSUInteger)toIndex
