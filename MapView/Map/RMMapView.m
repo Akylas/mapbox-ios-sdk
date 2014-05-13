@@ -2295,7 +2295,7 @@
 
         ((CATiledLayer *)tiledLayerView.layer).tileSize = CGSizeMake(tileSideLength, tileSideLength);
 
-        if (index >= [[_tileSourcesContainer tileSources] count])
+        if (index >= tileSourcesContainerSize - 1) //the count is minus 1 because we already added the source!
             [_tiledLayersSuperview addSubview:tiledLayerView];
         else
             [_tiledLayersSuperview insertSubview:tiledLayerView atIndex:index];
