@@ -1071,10 +1071,9 @@
                                  ((planetBounds.size.height - normalizedProjectedPoint.y - boundsRect.size.height) / _metersPerPixel) / zoomScale,
                                  (boundsRect.size.width / _metersPerPixel) / zoomScale,
                                  (boundsRect.size.height / _metersPerPixel) / zoomScale);
-    float currentZoom = [self zoom];
     float newZoomFactor = _mapScrollView.bounds.size.width /(zoomRect.size.width * zoomScale);
-//    float newZoom = log2f(newZoomFactor) + currentZoom;
     
+//    float newZoom = log2f(newZoomFactor) + currentZoom;
     _animationZoomFactor = animated?newZoomFactor:0;
     _aboutToStartZoomAnimation = animated;
     [self zoomToRect:zoomRect duration:[self animationDuration]];
