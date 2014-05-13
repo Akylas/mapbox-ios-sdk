@@ -880,7 +880,7 @@
     myOrigin.x = myOrigin.x - (zoomRect.size.width / 2);
     myOrigin.y = myOrigin.y - (zoomRect.size.height / 2);
 
-    RMLog(@"Origin is calculated at: %f, %f", [_projection projectedPointToCoordinate:myOrigin].longitude, [_projection projectedPointToCoordinate:myOrigin].latitude);
+//    RMLog(@"Origin is calculated at: %f, %f", [_projection projectedPointToCoordinate:myOrigin].longitude, [_projection projectedPointToCoordinate:myOrigin].latitude);
 
     zoomRect.origin = myOrigin;
 
@@ -1646,7 +1646,7 @@
     }
 
 //    RMLog(@"contentOffset: {%.0f,%.0f} -> {%.1f,%.1f} (%.0f,%.0f)", oldContentOffset.x, oldContentOffset.y, newContentOffset.x, newContentOffset.y, newContentOffset.x - oldContentOffset.x, newContentOffset.y - oldContentOffset.y);
-//    RMLog(@"contentSize: {%.0f,%.0f} -> {%.0f,%.0f}", _lastContentSize.width, _lastContentSize.height, mapScrollView.contentSize.width, mapScrollView.contentSize.height);
+//    RMLog(@"contentSize: {%.0f,%.0f} -> {%.0f,%.0f}", _lastContentSize.width, _lastContentSize.height, _mapScrollView.contentSize.width, _mapScrollView.contentSize.height);
 //    RMLog(@"isZooming: %d, scrollview.zooming: %d", _mapScrollViewIsZooming, mapScrollView.zooming);
 
     RMProjectedRect planetBounds = _projection.planetBounds;
@@ -2984,7 +2984,8 @@
     CGPoint newPosition = CGPointMake((normalizedProjectedPoint.x / _metersPerPixel) - contentX,
                                       contentHeight - (normalizedProjectedPoint.y / _metersPerPixel) - contentY);
 
-//    RMLog(@"Change annotation at {%f,%f} in mapView {%f,%f}", annotation.position.x, annotation.position.y, mapScrollView.contentSize.width, mapScrollView.contentSize.height);
+//    RMLog(@"annotation projectedLocation {%f,%f} with _metersPerPixel %f, planetBounds {%f,%f}",  annotation.projectedLocation.x,  annotation.projectedLocation.y, _metersPerPixel,planetBounds.origin.x, planetBounds.origin.y);
+//    RMLog(@"Change annotation at {%f,%f} with contentOffset {%f,%f}", annotation.position.x, annotation.position.y, _mapScrollView.contentOffset.x,_mapScrollView.contentOffset.y);
 
     [annotation setPosition:newPosition animated:animated];
 }

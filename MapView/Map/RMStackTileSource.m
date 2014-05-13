@@ -330,7 +330,7 @@
     
     [self notifyMapOnSourceChange];
     
-    RMLog(@"Added the tilesource '%@' to the container", [tileSource shortName]);
+//    RMLog(@"Added the tilesource '%@' to the container", [tileSource shortName]);
     
     return YES;
 }
@@ -343,7 +343,7 @@
     
     [_tileSources removeObject:tileSource];
     
-    RMLog(@"Removed the tilesource '%@' from the container", [tileSource shortName]);
+//    RMLog(@"Removed the tilesource '%@' from the container", [tileSource shortName]);
     
     if ([_tileSources count] == 0) {
         _shouldNotifyOnSourceChange = NO;
@@ -370,7 +370,7 @@
     [tileSource cancelAllDownloads];
     [_tileSources removeObject:tileSource];
     
-    RMLog(@"Removed the tilesource '%@' from the container", [tileSource shortName]);
+//    RMLog(@"Removed the tilesource '%@' from the container", [tileSource shortName]);
     
     if ([_tileSources count] == 0) {
         _shouldNotifyOnSourceChange = NO;
