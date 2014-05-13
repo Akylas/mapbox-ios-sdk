@@ -1390,7 +1390,6 @@
     _mapScrollView.maximumZoomScale = exp2f([self maxZoom]);
     _mapScrollView.contentOffset = CGPointMake(0.0, 0.0);
     _mapScrollView.clipsToBounds = NO;
-    _mapScrollView.dontUpdateDuringAnimation = NO;
 
     _tiledLayersSuperview = [[UIView alloc] initWithFrame:CGRectMake(0.0, 0.0, contentSize.width, contentSize.height)];
     _tiledLayersSuperview.userInteractionEnabled = NO;
@@ -1637,8 +1636,8 @@
     // The first offset during zooming out (animated) is always garbage
     if ( (_inFakeZoomAnimation || _mapScrollViewIsZooming == YES) &&
         _mapScrollView.zooming == NO &&
-        ((_lastContentSize.width > _mapScrollView.contentSize.width &&
-        (newContentOffset.y - oldContentOffset.y) == 0.0) || _mapScrollView.dontUpdateDuringAnimation))
+        (_lastContentSize.width > _mapScrollView.contentSize.width &&
+        (newContentOffset.y - oldContentOffset.y) == 0.0))
     {
         _lastContentOffset = _mapScrollView.contentOffset;
         _lastContentSize = _mapScrollView.contentSize;

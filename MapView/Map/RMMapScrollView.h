@@ -40,6 +40,5 @@
 @interface RMMapScrollView : UIScrollView
 
 @property (nonatomic, weak) id <RMMapScrollViewDelegate> mapScrollViewDelegate;
-@property (nonatomic, assign) BOOL dontUpdateDuringAnimation;
 
 @end

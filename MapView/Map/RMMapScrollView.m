@@ -31,7 +31,6 @@
 @implementation RMMapScrollView
 
 @synthesize mapScrollViewDelegate;
-@synthesize dontUpdateDuringAnimation = _dontUpdateDuringAnimation;
 
 - (void)setContentOffset:(CGPoint)contentOffset
 {
@@ -64,9 +63,7 @@
         factor = contentSize.width / previousContentSize.width;
     }
     
-    _dontUpdateDuringAnimation = YES;
     [super setContentSize:contentSize];
-    _dontUpdateDuringAnimation = NO;
 
     if (factor != 1.0)
         self.zoomScale *= factor;
