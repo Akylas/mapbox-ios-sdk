@@ -221,6 +221,10 @@
     
     BOOL _aboutToStartZoomAnimation;
     BOOL _inFakeZoomAnimation;
+    CLLocationCoordinate2D _initialCenterCoordinate;
+    float _initialTileSourceZoomLevel;
+    float _initialTileSourceMaxZoomLevel;
+    float _initialTileSourceMinZoomLevel;
 }
 
 @synthesize decelerationMode = _decelerationMode;
@@ -256,6 +260,11 @@
                                minZoomLevel:(float)initialTileSourceMinZoomLevel
                             backgroundImage:(UIImage *)backgroundImage
 {
+    
+    _initialCenterCoordinate = initialCenterCoordinate;
+    _initialTileSourceZoomLevel = initialTileSourceZoomLevel;
+    _initialTileSourceMaxZoomLevel = initialTileSourceMaxZoomLevel;
+    _initialTileSourceMinZoomLevel = initialTileSourceMinZoomLevel;
     _constrainMovement = _constrainMovementByUser = _bouncingEnabled = _zoomingInPivotsAroundCenter = NO;
     _draggingEnabled = YES;
 
@@ -314,17 +323,9 @@
     }
     
     if (newTilesource) {
-        if (initialTileSourceMinZoomLevel < newTilesource.minZoom) initialTileSourceMinZoomLevel = newTilesource.minZoom;
-        if (initialTileSourceMaxZoomLevel > newTilesource.maxZoom) initialTileSourceMaxZoomLevel = newTilesource.maxZoom;
-        [self setTileSourcesMinZoom:initialTileSourceMinZoomLevel];
-        [self setTileSourcesMaxZoom:initialTileSourceMaxZoomLevel];
-        [self setTileSourcesZoom:initialTileSourceZoomLevel];
-        
         [self setTileSource:newTilesource];
+        [self setCenterCoordinate:initialCenterCoordinate animated:NO];
     }
-
-    [self setCenterCoordinate:initialCenterCoordinate animated:NO];
-
     [self setDecelerationMode:RMMapDecelerationFast];
 
 //    self.showLogoBug = YES;
@@ -2279,6 +2280,13 @@
 
     if (tileSourcesContainerSize == 1)
     {
+        if (_zoom == 0) {
+            if (_initialTileSourceMinZoomLevel < newTileSource.minZoom) _initialTileSourceMinZoomLevel = newTileSource.minZoom;
+            if (_initialTileSourceMaxZoomLevel > newTileSource.maxZoom) _initialTileSourceMaxZoomLevel = newTileSource.maxZoom;
+            [self setTileSourcesMinZoom:_initialTileSourceMinZoomLevel];
+            [self setTileSourcesMaxZoom:_initialTileSourceMaxZoomLevel];
+            [self setTileSourcesZoom:_initialTileSourceZoomLevel];
+        }
         [self createMapView];
     }
     else
