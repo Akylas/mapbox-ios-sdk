@@ -1063,8 +1063,9 @@
 	RMProjectedPoint normalizedProjectedPoint;
 	normalizedProjectedPoint.x = boundsRect.origin.x + fabs(planetBounds.origin.x);
 	normalizedProjectedPoint.y = boundsRect.origin.y + fabs(planetBounds.origin.y);
-
-    float zoomScale = _mapScrollView.zoomScale;
+    
+    float currentZoom = [self zoom]; //can't relly on scrollView.zoomScale as it can be animating
+    float zoomScale = exp2f(currentZoom);
     
     CGRect zoomRect = CGRectMake((normalizedProjectedPoint.x / _metersPerPixel) / zoomScale,
                                  ((planetBounds.size.height - normalizedProjectedPoint.y - boundsRect.size.height) / _metersPerPixel) / zoomScale,
