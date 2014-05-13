@@ -633,20 +633,20 @@
 
 - (void)layoutSubviews
 {
-    if ( ! _mapScrollView)
-    {
-        // This will happen after initWithCoder: This needs to happen here because during
-        // unarchiving, the view won't have a frame yet and performInitialization...
-        // needs a scroll view frame in order to calculate _metersPerPixel.
-        // See https://github.com/mapbox/mapbox-ios-sdk/issues/270
-        //
-        [self performInitializationWithTilesource:nil
-                                 centerCoordinate:CLLocationCoordinate2DMake(kDefaultInitialLatitude, kDefaultInitialLongitude)
-                                        zoomLevel:kDefaultInitialZoomLevel
-                                     maxZoomLevel:kDefaultMaximumZoomLevel
-                                     minZoomLevel:kDefaultMinimumZoomLevel
-                                  backgroundImage:nil];
-    }
+//    if ( ! _mapScrollView)
+//    {
+//        // This will happen after initWithCoder: This needs to happen here because during
+//        // unarchiving, the view won't have a frame yet and performInitialization...
+//        // needs a scroll view frame in order to calculate _metersPerPixel.
+//        // See https://github.com/mapbox/mapbox-ios-sdk/issues/270
+//        //
+//        [self performInitializationWithTilesource:nil
+//                                 centerCoordinate:CLLocationCoordinate2DMake(kDefaultInitialLatitude, kDefaultInitialLongitude)
+//                                        zoomLevel:kDefaultInitialZoomLevel
+//                                     maxZoomLevel:kDefaultMaximumZoomLevel
+//                                     minZoomLevel:kDefaultMinimumZoomLevel
+//                                  backgroundImage:nil];
+//    }
 
     if ( ! self.viewControllerPresentingAttribution && ! _hideAttribution)
     {
