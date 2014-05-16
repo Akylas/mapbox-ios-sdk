@@ -37,7 +37,7 @@
     if (self.mapScrollViewDelegate)
         [self.mapScrollViewDelegate scrollView:self correctedContentOffset:&contentOffset];
 
-    if ( ! isnan(contentOffset.x) && ! isnan(contentOffset.y))
+    if ( ! isnan(contentOffset.x) && ! isnan(contentOffset.y) && ! isinf(contentOffset.x) && ! isinf(contentOffset.y))
         [super setContentOffset:contentOffset];
 }
 
@@ -46,7 +46,7 @@
     if (self.mapScrollViewDelegate)
         [self.mapScrollViewDelegate scrollView:self correctedContentOffset:&contentOffset];
 
-    if ( ! isnan(contentOffset.x) && ! isnan(contentOffset.y))
+    if ( ! isnan(contentOffset.x) && ! isnan(contentOffset.y) && ! isinf(contentOffset.x) && ! isinf(contentOffset.y))
         [super setContentOffset:contentOffset animated:animated];
 }
 
