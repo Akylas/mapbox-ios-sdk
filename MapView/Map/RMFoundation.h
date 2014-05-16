@@ -78,6 +78,9 @@ static inline BOOL RMSphericalTrapeziumContains(RMSphericalTrapezium box1, RMSph
             box2.southWest.latitude >= box1.southWest.latitude &&
             box2.southWest.longitude >= box1.southWest.longitude;
 }
+static inline CLLocationCoordinate2D RMSphericalTrapeziumCenter(RMSphericalTrapezium box){
+    return CLLocationCoordinate2DMake((box.northEast.latitude + box.southWest.latitude)/2.0, (box.northEast.longitude + box.southWest.longitude)/2.0);
+}
 #endif
 
 #pragma mark -
