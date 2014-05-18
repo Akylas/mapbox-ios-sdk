@@ -225,6 +225,9 @@
     float _initialTileSourceZoomLevel;
     float _initialTileSourceMaxZoomLevel;
     float _initialTileSourceMinZoomLevel;
+    
+    BOOL _userLocationZoomBasedOnAccuracy;
+    float _userLocationRequiredZoom;
 }
 
 @synthesize decelerationMode = _decelerationMode;
@@ -249,6 +252,7 @@
 @synthesize hideAttribution = _hideAttribution;
 @synthesize showLogoBug = _showLogoBug;
 @synthesize constraintRegionFit = _constraintRegionFit;
+@synthesize userLocationRequiredZoom = _userLocationRequiredZoom;
 
 #pragma mark -
 #pragma mark Initialization
@@ -270,7 +274,8 @@
 
     _draggedAnnotation = nil;
     _constrainingBox = _tilesConstrainingBox = _userConstrainingBox = kMapboxDefaultLatLonBoundingBox;
-
+    _userLocationZoomBasedOnAccuracy = YES;
+    _userLocationRequiredZoom = 10;
     self.backgroundColor = (RMPostVersion6 ? [UIColor colorWithRed:0.970 green:0.952 blue:0.912 alpha:1.000] : [UIColor grayColor]);
 
     self.clipsToBounds = YES;
@@ -3570,13 +3575,13 @@
         
         if (fabsf(userLocationPoint.x - mapCenterPoint.x) > 1.0 || fabsf(userLocationPoint.y - mapCenterPoint.y) > 1.0)
         {
-            if (round(_zoom) >= 10)
+            if (round(_zoom) >= _userLocationRequiredZoom)
             {
                 // at sufficient detail, just re-center the map; don't zoom
                 //
                 [self setCenterCoordinate:self.userLocation.location.coordinate animated:YES];
             }
-            else
+            else if (_userLocationZoomBasedOnAccuracy)
             {
                 // otherwise re-center and zoom in to near accuracy confidence
                 //
@@ -3600,6 +3605,9 @@
                 {
                     [self zoomWithLatitudeLongitudeBoundsSouthWest:desiredSouthWest northEast:desiredNorthEast animated:YES];
                 }
+            }
+            else {
+                [self setZoom:_userLocationRequiredZoom atCoordinate:newLocation.coordinate animated:YES];
             }
         }
     }
@@ -3886,6 +3894,12 @@
 - (void)setUserTrackingBarButtonItem:(RMUserTrackingBarButtonItem *)userTrackingBarButtonItem
 {
     _userTrackingBarButtonItem = userTrackingBarButtonItem;
+}
+
+-(void)setUserLocationRequiredZoom:(float)value
+{
+    _userLocationRequiredZoom = value;
+    _userLocationZoomBasedOnAccuracy = NO;
 }
 
 #pragma mark -
