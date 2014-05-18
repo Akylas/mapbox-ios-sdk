@@ -2589,13 +2589,14 @@
 // if #zoom is outside of range #minZoom to #maxZoom, zoom level is clamped to that range.
 - (void)setZoom:(float)newZoom
 {
+    newZoom = (newZoom > _maxZoom) ? _maxZoom : newZoom;
+    newZoom = (newZoom < _minZoom) ? _minZoom : newZoom;
     if (_zoom == newZoom)
         return;
 
     [self registerZoomEventByUser:NO];
 
-    _zoom = (newZoom > _maxZoom) ? _maxZoom : newZoom;
-    _zoom = (_zoom < _minZoom) ? _minZoom : _zoom;
+    _zoom = newZoom;
 
 //    RMLog(@"New zoom:%f", _zoom);
     
