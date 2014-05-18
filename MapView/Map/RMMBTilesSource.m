@@ -178,13 +178,13 @@
     [queue inDatabase:^(FMDatabase *db)
     {
         FMResultSet *results = [db executeQuery:@"select min(zoom_level) from tiles"];
-
+        
+        [results next];
+        
         if ([self dbHadError:db])
             minZoom = kMBTilesDefaultMinTileZoom;
-
-        [results next];
-
-        minZoom = [results doubleForColumnIndex:0];
+        else
+            minZoom = [results doubleForColumnIndex:0];
 
         [results close];
     }];
@@ -207,13 +207,12 @@
     [queue inDatabase:^(FMDatabase *db)
     {
         FMResultSet *results = [db executeQuery:@"select max(zoom_level) from tiles"];
-
+        
+        [results next];
         if ([self dbHadError:db])
             maxZoom = kMBTilesDefaultMaxTileZoom;
-
-        [results next];
-
-        maxZoom = [results doubleForColumnIndex:0];
+        else
+            maxZoom = [results doubleForColumnIndex:0];
 
         [results close];
     }];
