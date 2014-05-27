@@ -34,20 +34,26 @@
 
 - (void)setContentOffset:(CGPoint)contentOffset
 {
-    if (self.mapScrollViewDelegate)
-        [self.mapScrollViewDelegate scrollView:self correctedContentOffset:&contentOffset];
-
     if ( ! isnan(contentOffset.x) && ! isnan(contentOffset.y) && ! isinf(contentOffset.x) && ! isinf(contentOffset.y))
+    {
+        if (self.mapScrollViewDelegate)
+            [self.mapScrollViewDelegate scrollView:self correctedContentOffset:&contentOffset];
+        CGSize size1 = self.contentSize;
+        CGSize size2 = self.bounds.size;
         [super setContentOffset:contentOffset];
+    }
 }
 
 - (void)setContentOffset:(CGPoint)contentOffset animated:(BOOL)animated
 {
-    if (self.mapScrollViewDelegate)
-        [self.mapScrollViewDelegate scrollView:self correctedContentOffset:&contentOffset];
+    
 
     if ( ! isnan(contentOffset.x) && ! isnan(contentOffset.y) && ! isinf(contentOffset.x) && ! isinf(contentOffset.y))
+    {
+        if (self.mapScrollViewDelegate)
+            [self.mapScrollViewDelegate scrollView:self correctedContentOffset:&contentOffset];
         [super setContentOffset:contentOffset animated:animated];
+    }
 }
 
 - (void)setContentSize:(CGSize)contentSize
@@ -67,6 +73,14 @@
 
     if (factor != 1.0)
         self.zoomScale *= factor;
+}
+
+-(void)setBounds:(CGRect)bounds
+{
+    if ( ! isnan(bounds.origin.x) && ! isnan(bounds.origin.y))
+    {
+        [super setBounds:bounds];
+    }
 }
 
 @end
