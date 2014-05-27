@@ -1776,7 +1776,7 @@
 
 - (void)doubleTapWithGesture:(UIGestureRecognizer *)recognizer
 {
-    if (self.zoom < self.maxZoom)
+    if (self.zoom < floorf(self.maxZoom))
     {
         [self registerZoomEventByUser:YES];
         CGPoint aPoint = [recognizer locationInView:self];
@@ -2558,7 +2558,9 @@
 {
     if (newMaxZoom < 0.0)
         newMaxZoom = 0.0;
-
+    
+    if ( ! self.adjustTilesForRetinaDisplay && _screenScale > 1.0)
+        newMaxZoom -= 1.0;
     _maxZoom = newMaxZoom;
 
 //    RMLog(@"New maxZoom:%f", newMaxZoom);
