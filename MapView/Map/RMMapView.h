@@ -172,6 +172,7 @@ typedef enum : NSUInteger {
     backgroundImage:(UIImage *)backgroundImage;
 
 - (void)setFrame:(CGRect)frame;
+- (void)setFrame:(CGRect)frame keepZoom:(BOOL)keepZoom animated:(BOOL)animated;
 
 + (UIImage *)resourceImageNamed:(NSString *)imageName;
 + (NSString *)pathForBundleResourceNamed:(NSString *)name ofType:(NSString *)extension;

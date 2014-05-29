@@ -415,29 +415,34 @@
 
 - (void)setFrame:(CGRect)frame
 {
+    [self setFrame:frame keepZoom:NO animated:NO];
+}
+
+- (void)setFrame:(CGRect)frame keepZoom:(BOOL)keepZoom animated:(BOOL)animated
+{
     CGRect r = self.frame;
     RMProjectedRect projection = [self projectedBounds];
     [super setFrame:frame];
-
+    
     // only change if the frame changes and not during initialization
     if ( ! CGRectEqualToRect(r, frame))
     {
         RMProjectedPoint centerPoint = self.centerProjectedPoint;
-
+        
         CGRect bounds = CGRectMake(0, 0, frame.size.width, frame.size.height);
         _backgroundView.frame = bounds;
         _mapScrollView.frame = bounds;
         _overlayView.frame = bounds;
         
         [self updateConstrainingProjectedBounds];
-        [self setProjectedBounds:projection];
-
-        [self setCenterProjectedPoint:centerPoint animated:NO];
-
+        if (!keepZoom)[self setProjectedBounds:projection];
+        
+        [self setCenterProjectedPoint:centerPoint animated:animated];
+        
         [self correctPositionOfAllAnnotations];
-
+        
         self.minZoom = 0; // force new minZoom calculation
-
+        
         if (_loadingTileView)
             _loadingTileView.mapZooming = NO;
     }
