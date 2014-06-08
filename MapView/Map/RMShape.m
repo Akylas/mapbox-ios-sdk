@@ -45,6 +45,10 @@
     NSMutableArray *points;
 
     RMMapView *mapView;
+    
+    RMSphericalTrapezium _box;
+    BOOL boxHasChanged;
+    BOOL _optimizePath;
 }
 
 @synthesize scaleLineWidth;
@@ -54,6 +58,9 @@
 @synthesize shadowOffset;
 @synthesize enableShadow;
 @synthesize pathBoundingBox;
+@synthesize boundingBox = _box;
+@synthesize optimizePath = _optimizePath;
+@synthesize optimizationFactor;
 
 #define kDefaultLineWidth 2.0
 
@@ -67,14 +74,17 @@
     bezierPath = [UIBezierPath new];
     lineWidth = kDefaultLineWidth;
     ignorePathUpdates = NO;
+    _optimizePath = YES;
+    optimizationFactor = 2;
 
     shapeLayer = [CAShapeLayer new];
-    shapeLayer.rasterizationScale = [[UIScreen mainScreen] scale];
+    self.shouldRasterize = shapeLayer.shouldRasterize = YES;
+    self.rasterizationScale = shapeLayer.rasterizationScale = [[UIScreen mainScreen] scale];
     shapeLayer.lineWidth = lineWidth;
     shapeLayer.lineCap = kCALineCapButt;
     shapeLayer.lineJoin = kCALineJoinMiter;
     shapeLayer.strokeColor = [UIColor blackColor].CGColor;
-    shapeLayer.fillColor = [UIColor clearColor].CGColor;
+    shapeLayer.fillColor = nil;
     shapeLayer.shadowRadius = 0.0;
     shapeLayer.shadowOpacity = 0.0;
     shapeLayer.shadowOffset = CGSizeMake(0, 0);
@@ -94,13 +104,64 @@
     points = [NSMutableArray array];
 
     [(id)self setValue:[[UIScreen mainScreen] valueForKey:@"scale"] forKey:@"contentsScale"];
-
+    boxHasChanged = NO;
     return self;
 }
 
 - (id <CAAction>)actionForKey:(NSString *)key
 {
     return nil;
+}
+
+RMProjectedRect RMProjectedRectFromPoints(RMProjectedPoint p1, RMProjectedPoint p2) {
+    return RMProjectedRectMake(MIN(p1.x, p2.x),
+               MIN(p1.y, p2.y),
+               MAX(p1.x, p2.x),
+               MAX(p1.y, p2.y));
+}
+
+-(UIBezierPath*)computeOptimizePathForScale:(CGFloat)scale withProjectedBounds:(RMProjectedRect)projection {
+    UIBezierPath* result = [UIBezierPath new];
+    int size = (int)[points count];
+    
+    int newSize = 0;
+    
+    if (size == 0) {
+        return result;
+    }
+    BOOL projectedPoint0Defined = NO;
+    RMProjectedPoint projectedPoint0, projectedPoint1;
+//    RMProjectedRect pointsBounds;
+    
+    [[points lastObject] getValue:&projectedPoint0];
+    for (int i = size - 2; i >= 0; i--) {
+        // compute next points
+        [[points objectAtIndex:i] getValue:&projectedPoint1];
+//        pointsBounds = RMProjectedRectFromPoints(projectedPoint0, projectedPoint1);
+//        if (!RMProjectedRectIntersectsProjectedRect(pointsBounds, projection)) {
+//            projectedPoint0 = projectedPoint1;
+//            projectedPoint0Defined = NO;
+//            continue;
+//        }
+        // the starting point may be not calculated, because previous segment was out of clip
+        // bounds
+        if (projectedPoint0Defined == NO) {
+            projectedPoint0Defined = YES;
+            [result moveToPoint:CGPointMake(projectedPoint0.x - projectedLocation.x, -(projectedPoint0.y - projectedLocation.y))];
+        }
+        
+        // skip this point, too close to previous point
+        if (fabs(projectedPoint1.x - projectedPoint0.x) + fabs( projectedPoint1.y - projectedPoint0.y) <= optimizationFactor/scale) {
+            continue;
+        }
+        
+        newSize++;
+        
+        [result addLineToPoint:CGPointMake(projectedPoint1.x - projectedLocation.x, -(projectedPoint1.y - projectedLocation.y))];
+        projectedPoint0 = projectedPoint1;
+    }
+    NSLog(@"computeOptimizePathForScale original count %d, final count %d", size, newSize);
+    return result;
 }
 
 #pragma mark -
@@ -147,13 +208,23 @@
 
     // we are about to overwrite nonClippedBounds, therefore we save the old value
     CGRect previousNonClippedBounds = nonClippedBounds;
-
-    if (scale != lastScale)
+    BOOL changedScale = scale != lastScale;
+    if (changedScale || _optimizePath)
     {
-        lastScale = scale;
 
         CGAffineTransform scaling = CGAffineTransformMakeScale(scale, scale);
-        UIBezierPath *scaledPath = [bezierPath copy];
+        UIBezierPath *scaledPath;
+        if (_optimizePath) {
+            scaledPath = [self computeOptimizePathForScale:scale withProjectedBounds:[mapView projectedBoundsForScale:scale]];
+            if (changedScale && animated) {
+                UIBezierPath* originalPath = [scaledPath copy];
+                [originalPath applyTransform:CGAffineTransformMakeScale(lastScale, lastScale)];
+                shapeLayer.path = originalPath.CGPath;
+            }
+        }
+        else {
+            scaledPath = [bezierPath copy];
+        }
         [scaledPath applyTransform:scaling];
 
         if (animated)
@@ -169,15 +240,17 @@
         }
 
         shapeLayer.path = scaledPath.CGPath;
-
-        // calculate the bounds of the scaled path
-        CGRect boundsInMercators = scaledPath.bounds;
-        if (isinf(boundsInMercators.origin.x) || isinf(boundsInMercators.origin.y) ||
-            isnan(boundsInMercators.origin.x) || isnan(boundsInMercators.origin.y) ||
-            CGRectIsInfinite(boundsInMercators)) {
-            boundsInMercators = CGRectZero;
+        if (changedScale) {
+            lastScale = scale;
+            // calculate the bounds of the scaled path
+            CGRect boundsInMercators = scaledPath.bounds;
+            if (isinf(boundsInMercators.origin.x) || isinf(boundsInMercators.origin.y) ||
+                isnan(boundsInMercators.origin.x) || isnan(boundsInMercators.origin.y) ||
+                CGRectIsInfinite(boundsInMercators)) {
+                boundsInMercators = CGRectZero;
+            }
+            nonClippedBounds = CGRectInset(boundsInMercators, -scaledLineWidth - (2 * shapeLayer.shadowRadius), -scaledLineWidth - (2 * shapeLayer.shadowRadius));
         }
-        nonClippedBounds = CGRectInset(boundsInMercators, -scaledLineWidth - (2 * shapeLayer.shadowRadius), -scaledLineWidth - (2 * shapeLayer.shadowRadius));
     }
 
     // if the path is not scaled, nonClippedBounds stay the same as in the previous invokation
@@ -259,9 +332,12 @@
         boundsAnimation.toValue = [NSValue valueWithCGRect:nonClippedBounds];
         [self addAnimation:boundsAnimation forKey:@"animateBounds"];
     }
-
-    self.bounds = clippedBounds;
-    previousBounds = clippedBounds;
+    
+    if (!CGRectEqualToRect(previousBounds, clippedBounds)) {
+        self.bounds = clippedBounds;
+        previousBounds = clippedBounds;
+    }
+    
 
     // anchorPoint is animated non-clipped but set with clipping
     if (animated)
@@ -276,11 +352,9 @@
     }
 
     self.anchorPoint = clippedAnchorPoint;
-
-    if (self.annotation && [points count])
-    {
-        self.annotation.coordinate = ((CLLocation *)[points objectAtIndex:0]).coordinate;
-        [self.annotation setBoundingBoxFromLocations:points];
+    if (boxHasChanged) {
+        boxHasChanged = NO;
+        [self.annotation setBoundingBoxCoordinatesSouthWest:_box.southWest northEast:_box.northEast];
     }
 }
 
@@ -289,7 +363,16 @@
 
 - (void)addCurveToProjectedPoint:(RMProjectedPoint)point controlPoint1:(RMProjectedPoint)controlPoint1 controlPoint2:(RMProjectedPoint)controlPoint2 withDrawing:(BOOL)isDrawing
 {
-    [points addObject:[[CLLocation alloc] initWithLatitude:[mapView projectedPointToCoordinate:point].latitude longitude:[mapView projectedPointToCoordinate:point].longitude]];
+    
+    __block CLLocation* newPointCoordinates = nil;
+    CLLocation* (^getNewPointCoordinates)() = ^() {
+        if (newPointCoordinates == nil) {
+            newPointCoordinates =[[CLLocation alloc] initWithLatitude:[mapView projectedPointToCoordinate:point].latitude longitude:[mapView projectedPointToCoordinate:point].longitude];
+        }
+        return newPointCoordinates;
+    };
+    
+    [points addObject:[NSValue valueWithBytes:&point objCType:@encode(RMProjectedPoint)]];
 
     if (isFirstPoint)
     {
@@ -299,6 +382,7 @@
         self.position = [mapView projectedPointToPixel:projectedLocation];
 
         [bezierPath moveToPoint:CGPointMake(0.0f, 0.0f)];
+        self.annotation.coordinate = getNewPointCoordinates().coordinate;
     }
     else
     {
@@ -339,9 +423,33 @@
         lastScale = 0.0;
         [self recalculateGeometryAnimated:NO];
     }
-
-    [self setNeedsDisplay];
+    if (self.annotation && [points count])
+    {
+        [self updateBoundingBoxWithPoint:getNewPointCoordinates()];
+    }
+    if (ignorePathUpdates) return;
+    [self recalculateGeometryAnimated:NO];
 }
+
+
+-(void)updateBoundingBoxWithPoint:(CLLocation*) point {
+    if ([points count] == 0) {
+        _box = ((RMSphericalTrapezium){.northEast = {.latitude = kRMMinLatitude, .longitude = kRMMinLongitude}, .southWest = {.latitude = kRMMaxLatitude, .longitude = kRMMaxLongitude}});
+    }
+    CLLocationDegrees currentLatitude = point.coordinate.latitude;
+    CLLocationDegrees currentLongitude = point.coordinate.longitude;
+    
+    // POIs outside of the world...
+    if (currentLatitude < kRMMinLatitude || currentLatitude > kRMMaxLatitude || currentLongitude < kRMMinLongitude || currentLongitude > kRMMaxLongitude)
+        return;
+    
+    _box.northEast.latitude = fmax(currentLatitude, _box.northEast.latitude);
+    _box.northEast.longitude = fmax(currentLongitude, _box.northEast.longitude);
+    _box.southWest.latitude  = fmin(currentLatitude, _box.southWest.latitude);
+    _box.southWest.longitude = fmin(currentLongitude, _box.southWest.longitude);
+    boxHasChanged = YES;
+}
+
 
 - (void)moveToProjectedPoint:(RMProjectedPoint)projectedPoint
 {
@@ -458,8 +566,11 @@
 
 - (void)closePath
 {
-    if ([points count])
-        [self addLineToCoordinate:((CLLocation *)[points objectAtIndex:0]).coordinate];
+    if ([points count]) {
+        RMProjectedPoint p;
+        [[points objectAtIndex:0] getValue:&p];
+        [self addLineToProjectedPoint:p];
+    }
 }
 
 - (float)lineWidth
@@ -607,5 +718,4 @@
         [self recalculateGeometryAnimated:NO];
     }
 }
-
 @end

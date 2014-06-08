@@ -1056,6 +1056,20 @@
     return normalizedProjectedRect;
 }
 
+- (RMProjectedRect)projectedBoundsForScale:(CGFloat)scale
+{
+    CGPoint bottomLeft = CGPointMake(_mapScrollView.contentOffset.x, _mapScrollView.contentSize.height - (_mapScrollView.contentOffset.y + _mapScrollView.bounds.size.height));
+    
+    RMProjectedRect planetBounds = _projection.planetBounds;
+    RMProjectedRect normalizedProjectedRect;
+    normalizedProjectedRect.origin.x = (bottomLeft.x / scale) - fabs(planetBounds.origin.x);
+    normalizedProjectedRect.origin.y = (bottomLeft.y / scale) - fabs(planetBounds.origin.y);
+    normalizedProjectedRect.size.width = _mapScrollView.bounds.size.width / scale;
+    normalizedProjectedRect.size.height = _mapScrollView.bounds.size.height / scale;
+    
+    return normalizedProjectedRect;
+}
+
 - (void)setProjectedBounds:(RMProjectedRect)boundsRect
 {
     [self setProjectedBounds:boundsRect animated:YES];

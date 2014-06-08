@@ -80,6 +80,9 @@
 @property (nonatomic, assign) CGFloat shadowBlur;
 @property (nonatomic, assign) CGSize shadowOffset;
 @property (nonatomic, assign) BOOL enableShadow;
+@property (nonatomic, readonly) RMSphericalTrapezium boundingBox;
+@property (nonatomic, assign) BOOL optimizePath;
+@property (nonatomic, assign) CGFloat optimizationFactor;
 
 /** The bounding box of the shape in the current viewport. */
 @property (nonatomic, readonly) CGRect pathBoundingBox;

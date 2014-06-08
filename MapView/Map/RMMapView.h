@@ -224,6 +224,9 @@ typedef enum : NSUInteger {
 @property (nonatomic, readonly) RMProjectedPoint projectedOrigin;
 @property (nonatomic, readonly) RMProjectedSize projectedViewSize;
 
+
+- (RMProjectedRect)projectedBoundsForScale:(CGFloat)scale;
+
 // recenter the map on #boundsRect, expressed in projected meters
 - (void)setProjectedBounds:(RMProjectedRect)boundsRect animated:(BOOL)animated;
 
