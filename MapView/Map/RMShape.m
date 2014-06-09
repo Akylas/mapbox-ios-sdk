@@ -75,7 +75,7 @@
     lineWidth = kDefaultLineWidth;
     ignorePathUpdates = NO;
     _optimizePath = YES;
-    optimizationFactor = 2;
+    optimizationFactor = 10;
 
     shapeLayer = [CAShapeLayer new];
     self.shouldRasterize = shapeLayer.shouldRasterize = YES;
@@ -84,7 +84,7 @@
     shapeLayer.lineCap = kCALineCapButt;
     shapeLayer.lineJoin = kCALineJoinMiter;
     shapeLayer.strokeColor = [UIColor blackColor].CGColor;
-    shapeLayer.fillColor = nil;
+    shapeLayer.fillColor = [UIColor clearColor].CGColor;
     shapeLayer.shadowRadius = 0.0;
     shapeLayer.shadowOpacity = 0.0;
     shapeLayer.shadowOffset = CGSizeMake(0, 0);
@@ -160,7 +160,6 @@ RMProjectedRect RMProjectedRectFromPoints(RMProjectedPoint p1, RMProjectedPoint 
         [result addLineToPoint:CGPointMake(projectedPoint1.x - projectedLocation.x, -(projectedPoint1.y - projectedLocation.y))];
         projectedPoint0 = projectedPoint1;
     }
-    NSLog(@"computeOptimizePathForScale original count %d, final count %d", size, newSize);
     return result;
 }
 
@@ -209,7 +208,7 @@ RMProjectedRect RMProjectedRectFromPoints(RMProjectedPoint p1, RMProjectedPoint 
     // we are about to overwrite nonClippedBounds, therefore we save the old value
     CGRect previousNonClippedBounds = nonClippedBounds;
     BOOL changedScale = scale != lastScale;
-    if (changedScale || _optimizePath)
+    if (changedScale)
     {
 
         CGAffineTransform scaling = CGAffineTransformMakeScale(scale, scale);
