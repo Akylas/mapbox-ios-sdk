@@ -75,7 +75,7 @@
     lineWidth = kDefaultLineWidth;
     ignorePathUpdates = NO;
     _optimizePath = YES;
-    optimizationFactor = 10;
+    optimizationFactor = 2;
 
     shapeLayer = [CAShapeLayer new];
     self.shouldRasterize = shapeLayer.shouldRasterize = YES;
