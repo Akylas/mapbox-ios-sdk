@@ -35,7 +35,7 @@
 /** An RMShape object is used to represent a line, polygon, or other shape composed of two or more points connected by lines. An RMShape object changes visible size in response to map zooms in order to consistently represent coverage of the same geographic area. */
 @interface RMShape : RMMapLayer
 {
-    CGRect pathBoundingBox;
+//    CGRect pathBoundingBox;
 
     // Width of the line, in pixels
     float lineWidth;
@@ -85,7 +85,7 @@
 @property (nonatomic, assign) CGFloat optimizationFactor;
 
 /** The bounding box of the shape in the current viewport. */
-@property (nonatomic, readonly) CGRect pathBoundingBox;
+//@property (nonatomic, readonly) CGRect pathBoundingBox;
 
 /** @name Drawing Shapes */
 
@@ -143,5 +143,7 @@
 *
 * There is no requirement that a path be closed. */
 - (void)closePath;
+
+- (void)setCoordinates:(NSArray*)poins;
 
 @end

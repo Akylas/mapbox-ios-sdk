@@ -57,7 +57,7 @@
 @synthesize shadowBlur;
 @synthesize shadowOffset;
 @synthesize enableShadow;
-@synthesize pathBoundingBox;
+//@synthesize pathBoundingBox;
 @synthesize boundingBox = _box;
 @synthesize optimizePath = _optimizePath;
 @synthesize optimizationFactor;
@@ -90,7 +90,7 @@
     shapeLayer.shadowOffset = CGSizeMake(0, 0);
     [self addSublayer:shapeLayer];
 
-    pathBoundingBox = CGRectZero;
+//    pathBoundingBox = CGRectZero;
     nonClippedBounds = CGRectZero;
     previousBounds = CGRectZero;
     lastScale = 0.0;
