@@ -351,7 +351,7 @@ RMProjectedRect RMProjectedRectFromPoints(RMProjectedPoint p1, RMProjectedPoint 
     }
 
     self.anchorPoint = clippedAnchorPoint;
-    if (boxHasChanged) {
+    if (boxHasChanged && self.annotation) {
         boxHasChanged = NO;
         [self.annotation setBoundingBoxCoordinatesSouthWest:_box.southWest northEast:_box.northEast];
     }
@@ -372,6 +372,7 @@ RMProjectedRect RMProjectedRectFromPoints(RMProjectedPoint p1, RMProjectedPoint 
     };
     
     [points addObject:[NSValue valueWithBytes:&point objCType:@encode(RMProjectedPoint)]];
+    [self updateBoundingBoxWithPoint:getNewPointCoordinates()];
 
     if (isFirstPoint)
     {
@@ -418,13 +419,6 @@ RMProjectedRect RMProjectedRectFromPoints(RMProjectedPoint p1, RMProjectedPoint 
         {
             [bezierPath moveToPoint:CGPointMake(point.x, -point.y)];
         }
-
-        lastScale = 0.0;
-        [self recalculateGeometryAnimated:NO];
-    }
-    if (self.annotation && [points count])
-    {
-        [self updateBoundingBoxWithPoint:getNewPointCoordinates()];
     }
     if (ignorePathUpdates) return;
     [self recalculateGeometryAnimated:NO];
@@ -432,7 +426,7 @@ RMProjectedRect RMProjectedRectFromPoints(RMProjectedPoint p1, RMProjectedPoint 
 
 
 -(void)updateBoundingBoxWithPoint:(CLLocation*) point {
-    if ([points count] == 0) {
+    if (isFirstPoint) {
         _box = ((RMSphericalTrapezium){.northEast = {.latitude = kRMMinLatitude, .longitude = kRMMinLongitude}, .southWest = {.latitude = kRMMaxLatitude, .longitude = kRMMaxLongitude}});
     }
     CLLocationDegrees currentLatitude = point.coordinate.latitude;
