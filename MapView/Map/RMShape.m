@@ -359,6 +359,17 @@ RMProjectedRect RMProjectedRectFromPoints(RMProjectedPoint p1, RMProjectedPoint 
 
 #pragma mark -
 
+- (void)setCoordinates:(NSArray*)poins {
+    isFirstPoint = YES;
+    bezierPath = [UIBezierPath new];
+    [self performBatchOperations:^(RMShape *aShape) {
+        for (id point in poins) {
+            if ([point isKindOfClass:[CLLocation class]]) {
+                [self addLineToCoordinate:((CLLocation*)point).coordinate];
+            }
+        }
+    }];
+}
 
 - (void)addCurveToProjectedPoint:(RMProjectedPoint)point controlPoint1:(RMProjectedPoint)controlPoint1 controlPoint2:(RMProjectedPoint)controlPoint2 withDrawing:(BOOL)isDrawing
 {
