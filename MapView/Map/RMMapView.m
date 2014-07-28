@@ -305,8 +305,8 @@
     
     _aboutToStartZoomAnimation = _inFakeZoomAnimation = NO;
 
-    _annotations = [NSMutableSet new];
-    _visibleAnnotations = [NSMutableSet new];
+    _annotations = [NSMutableArray new];
+    _visibleAnnotations = [NSMutableArray new];
     [self setQuadTree:[[RMQuadTree alloc] initWithMapView:self]];
     _clusteringEnabled = NO;
     _positionClusterMarkersAtTheGravityCenter = YES;
@@ -3095,7 +3095,7 @@
                                                          withProjectedClusterSize:RMProjectedSizeMake(self.clusterAreaSize.width * _metersPerPixel, self.clusterAreaSize.height * _metersPerPixel)
                                                     andProjectedClusterMarkerSize:RMProjectedSizeMake(self.clusterMarkerSize.width * _metersPerPixel, self.clusterMarkerSize.height * _metersPerPixel)
                                                                 findGravityCenter:self.positionClusterMarkersAtTheGravityCenter];
-        NSMutableSet *previousVisibleAnnotations = [[NSMutableSet alloc] initWithSet:_visibleAnnotations];
+        NSMutableSet *previousVisibleAnnotations = [[NSMutableSet alloc] initWithArray:_visibleAnnotations];
 
         for (RMAnnotation *annotation in annotationsToCorrect)
         {
@@ -3219,7 +3219,7 @@
 
     // sort annotation layer z-indexes so that they overlap properly
     //
-    NSMutableArray *sortedAnnotations = [NSMutableArray arrayWithArray:[_visibleAnnotations allObjects]];
+    NSMutableArray *sortedAnnotations = [NSMutableArray arrayWithArray:_visibleAnnotations];
 
     [sortedAnnotations sortUsingComparator:^(id obj1, id obj2)
     {
@@ -3284,12 +3284,12 @@
 
 - (NSArray *)annotations
 {
-    return [_annotations allObjects];
+    return [NSArray arrayWithArray:_annotations];
 }
 
 - (NSArray *)visibleAnnotations
 {
-    return [_visibleAnnotations allObjects];
+    return [NSArray arrayWithArray:_visibleAnnotations];
 }
 
 - (void)addAnnotation:(RMAnnotation *)annotation
@@ -3375,7 +3375,7 @@
 
 - (void)removeAllAnnotations
 {
-    [self removeAnnotations:[_annotations allObjects]];
+    [self removeAnnotations:_annotations];
 }
 
 - (CGPoint)mapPositionForAnnotation:(RMAnnotation *)annotation
