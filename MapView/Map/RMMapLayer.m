@@ -29,6 +29,7 @@
 #import "RMPixel.h"
 #import "RMAnnotation.h"
 #import "RMMapView.h"
+#import "SMCalloutView/SMCalloutView.h"
 
 @interface RMMapView (PrivateMethods)
 
@@ -48,6 +49,10 @@
 @synthesize calloutOffset;
 @synthesize leftCalloutAccessoryView;
 @synthesize rightCalloutAccessoryView;
+@synthesize customCalloutAccessoryView;
+@synthesize calloutPadding;
+@synthesize calloutBackgroundColor;
+@synthesize calloutCornerRadius;
 
 - (id)init
 {
@@ -56,6 +61,8 @@
 
     self.annotation = nil;
     self.calloutOffset = CGPointZero;
+    self.calloutPadding = [SMCalloutView calloutDefaultPadding];
+    self.calloutCornerRadius = [SMCalloutView calloutDefaultCornerRadius];
 
 	return self;
 }

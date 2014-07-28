@@ -29,6 +29,7 @@
 
 #import "RMPixel.h"
 #import "RMConfiguration.h"
+#import "RMAnnotation.h"
 
 @implementation RMMarker
 
@@ -44,6 +45,21 @@
 {
     return [UIFont systemFontOfSize:15];
 }
+
+- (CALayer *)hitTest:(CGPoint)point
+{
+    if (self.annotation.isCurrentAnnotation) {
+        return nil;
+    }
+    CGRect frame = self.frame;
+    frame.size.height = frame.size.height / 2.0f + 5.0f;
+    if (CGRectContainsPoint(frame, point)) {
+        return self;
+    }
+
+    return nil;
+}
+
 
 // init
 - (id)init

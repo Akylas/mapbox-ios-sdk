@@ -2040,38 +2040,61 @@
         [self deselectAnnotation:_currentAnnotation animated:NO];
 
         _currentAnnotation = anAnnotation;
+        _currentAnnotation.isCurrentAnnotation = YES;
 
-        if (anAnnotation.layer.canShowCallout && anAnnotation.title)
+        if (anAnnotation.layer.canShowCallout)
         {
             _currentCallout = [SMCalloutView platformCalloutView];
-
-            if (RMPostVersion7)
-                _currentCallout.tintColor = self.tintColor;
-
-            _currentCallout.title    = anAnnotation.title;
-            _currentCallout.subtitle = anAnnotation.subtitle;
-
-            _currentCallout.calloutOffset = anAnnotation.layer.calloutOffset;
-
-            if (anAnnotation.layer.leftCalloutAccessoryView)
-            {
-                if ([anAnnotation.layer.leftCalloutAccessoryView isKindOfClass:[UIControl class]])
-                    [anAnnotation.layer.leftCalloutAccessoryView addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapOnCalloutAccessoryWithGestureRecognizer:)]];
-
-                _currentCallout.leftAccessoryView = anAnnotation.layer.leftCalloutAccessoryView;
-            }
-
-            if (anAnnotation.layer.rightCalloutAccessoryView)
-            {
-                if ([anAnnotation.layer.rightCalloutAccessoryView isKindOfClass:[UIControl class]])
-                    [anAnnotation.layer.rightCalloutAccessoryView addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapOnCalloutAccessoryWithGestureRecognizer:)]];
-
-                _currentCallout.rightAccessoryView = anAnnotation.layer.rightCalloutAccessoryView;
+            
+            if (_delegateHasPrepareAnnotationCallout) {
+                [_delegate mapView:self willShowCallout:_currentCallout forAnnotation:anAnnotation];
+            }else {
+                if (RMPostVersion7)
+                    _currentCallout.tintColor = self.tintColor;
+                
+                _currentCallout.title    = anAnnotation.title;
+                _currentCallout.subtitle = anAnnotation.subtitle;
+                
+                _currentCallout.calloutOffset = anAnnotation.layer.calloutOffset;
+                _currentCallout.leftAccessoryView = nil;
+                _currentCallout.rightAccessoryView = nil;
+                _currentCallout.contentView = nil;
+                _currentCallout.contentView = nil;
+                _currentCallout.padding = anAnnotation.layer.calloutPadding;
+                SMCalloutMaskedBackgroundView* backView = (SMCalloutMaskedBackgroundView*)_currentCallout.backgroundView;
+                if (backView && [backView isKindOfClass:[SMCalloutMaskedBackgroundView class]]) {
+                    backView.backgroundColor = anAnnotation.layer.calloutBackgroundColor;
+                    backView.cornerRadius = anAnnotation.layer.calloutCornerRadius;
+                }
+                if (anAnnotation.layer.customCalloutAccessoryView)
+                {
+                    if ([anAnnotation.layer.customCalloutAccessoryView isKindOfClass:[UIControl class]])
+                        [anAnnotation.layer.customCalloutAccessoryView addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapOnCalloutAccessoryWithGestureRecognizer:)]];
+                    
+                    _currentCallout.contentView = anAnnotation.layer.customCalloutAccessoryView;
+                }
+                else {
+                    if (anAnnotation.layer.leftCalloutAccessoryView)
+                    {
+                        if ([anAnnotation.layer.leftCalloutAccessoryView isKindOfClass:[UIControl class]])
+                            [anAnnotation.layer.leftCalloutAccessoryView addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapOnCalloutAccessoryWithGestureRecognizer:)]];
+                        
+                        _currentCallout.leftAccessoryView = anAnnotation.layer.leftCalloutAccessoryView;
+                    }
+                    
+                    if (anAnnotation.layer.rightCalloutAccessoryView)
+                    {
+                        if ([anAnnotation.layer.rightCalloutAccessoryView isKindOfClass:[UIControl class]])
+                            [anAnnotation.layer.rightCalloutAccessoryView addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapOnCalloutAccessoryWithGestureRecognizer:)]];
+                        
+                        _currentCallout.rightAccessoryView = anAnnotation.layer.rightCalloutAccessoryView;
+                    }
+                }
+                _currentCallout.permittedArrowDirection = SMCalloutArrowDirectionDown;
             }
 
             _currentCallout.delegate = self;
 
-            _currentCallout.permittedArrowDirection = SMCalloutArrowDirectionDown;
 
             [_currentCallout presentCalloutFromRect:anAnnotation.layer.bounds
                                             inLayer:anAnnotation.layer
@@ -2093,7 +2116,7 @@
     if ([annotation isEqual:_currentAnnotation])
     {
         [_currentCallout dismissCalloutAnimated:animated];
-
+        annotation.isCurrentAnnotation = NO;
         if (animated)
             [self performSelector:@selector(correctPositionOfAllAnnotations) withObject:nil afterDelay:1.0/3.0];
         else

@@ -86,6 +86,8 @@
 /** Whether touch events for the annotation's layer are recognized. Defaults to `YES`. */
 @property (nonatomic, assign, getter=isEnabled) BOOL enabled;
 
+@property (nonatomic, assign) BOOL isCurrentAnnotation;
+
 /** @name Representing an Annotation Visually */
 
 /** An object representing the annotation's visual appearance.

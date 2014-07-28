@@ -99,6 +99,17 @@
 *   If the view you specify is also a descendant of the UIControl class, you can use the map view’s delegate to receive notifications when your control is tapped. If it does not descend from UIControl, your view is responsible for handling any touch events within its bounds. */
 @property (nonatomic, strong) UIView *rightCalloutAccessoryView;
 
+/** The custom view to display in the standard callout bubble.
+ *
+ *   This property is set to `nil` by default.
+ *
+ *   If the view you specify is also a descendant of the UIControl class, you can use the map view’s delegate to receive notifications when your control is tapped. If it does not descend from UIControl, your view is responsible for handling any touch events within its bounds. */
+@property (nonatomic, strong) UIView *customCalloutAccessoryView;
+
+@property (nonatomic, strong) UIColor *calloutBackgroundColor;
+@property (nonatomic, assign) UIEdgeInsets calloutPadding;
+@property (nonatomic, assign) CGFloat calloutCornerRadius;
+
 /** Set the screen position of the layer.
 *   @param position The desired screen position.
 *   @param animated If set to `YES`, any position change is animated. */

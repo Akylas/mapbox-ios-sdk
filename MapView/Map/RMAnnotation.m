@@ -89,7 +89,8 @@
     self.hasBoundingBox    = NO;
     self.enabled           = YES;
     self.clusteringEnabled = YES;
-
+    
+    self.isCurrentAnnotation      = NO;
     self.isUserLocationAnnotation = NO;
 
     layer = nil;
