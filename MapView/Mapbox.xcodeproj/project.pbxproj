@@ -109,8 +109,8 @@
 		DD07A23D17F3AF9800E420B2 /* HeadingAngleMaskLarge@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = DD07A23717F3AF9800E420B2 /* HeadingAngleMaskLarge@2x.png */; };
 		DD1985C1165C5F6400DF667F /* RMTileMillSource.h in Headers */ = {isa = PBXBuildFile; fileRef = DD1985BF165C5F6400DF667F /* RMTileMillSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DD1985C2165C5F6400DF667F /* RMTileMillSource.m in Sources */ = {isa = PBXBuildFile; fileRef = DD1985C0165C5F6400DF667F /* RMTileMillSource.m */; };
-		DD1E3C6E161F954F004FC649 /* SMCalloutView.h in Headers */ = {isa = PBXBuildFile; fileRef = DD1E3C6C161F954F004FC649 /* SMCalloutView.h */; };
-		DD1E3C6F161F954F004FC649 /* SMCalloutView.m in Sources */ = {isa = PBXBuildFile; fileRef = DD1E3C6D161F954F004FC649 /* SMCalloutView.m */; };
+		DD1E3C6E161F954F004FC649 /* SMCalloutView.h in Headers */ = {isa = PBXBuildFile; fileRef = DD1E3C6C161F954F004FC649 /* SMCalloutView.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DD1E3C6F161F954F004FC649 /* SMCalloutView.m in Sources */ = {isa = PBXBuildFile; fileRef = DD1E3C6D161F954F004FC649 /* SMCalloutView.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		DD280D1416EFDDD30014B549 /* examples.map-z2effxa8.json in Resources */ = {isa = PBXBuildFile; fileRef = DD280D1216EFDDD30014B549 /* examples.map-z2effxa8.json */; };
 		DD2B374514CF8041008DE8CB /* FMDatabase.h in Headers */ = {isa = PBXBuildFile; fileRef = DD2B373F14CF8041008DE8CB /* FMDatabase.h */; };
 		DD2B374614CF8041008DE8CB /* FMDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = DD2B374014CF8041008DE8CB /* FMDatabase.m */; };
@@ -798,6 +798,7 @@
 				DDE357F816522CD8001DB842 /* RMPolygonAnnotation.h in Headers */,
 				DD1985C1165C5F6400DF667F /* RMTileMillSource.h in Headers */,
 				DD63176317D15EB5008CA79B /* RMCircleAnnotation.h in Headers */,
+				DD1E3C6E161F954F004FC649 /* SMCalloutView.h in Headers */,
 				B8C974220E8A19B2007D16AD /* RMProjection.h in Headers */,
 				B8C974260E8A19B2007D16AD /* RMTile.h in Headers */,
 				B8C974270E8A19B2007D16AD /* RMPixel.h in Headers */,
@@ -828,7 +829,6 @@
 				DD2B374914CF8041008DE8CB /* FMResultSet.h in Headers */,
 				DD2B374F14CF814F008DE8CB /* FMDatabasePool.h in Headers */,
 				DD2B375114CF814F008DE8CB /* FMDatabaseQueue.h in Headers */,
-				DD1E3C6E161F954F004FC649 /* SMCalloutView.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
