@@ -160,6 +160,7 @@
     BOOL _delegateHasDidUpdateUserLocation;
     BOOL _delegateHasDidFailToLocateUserWithError;
     BOOL _delegateHasDidChangeUserTrackingMode;
+    BOOL _delegateHasPrepareAnnotationCallout;
 
     UIView *_backgroundView;
     RMMapScrollView *_mapScrollView;
@@ -171,8 +172,8 @@
     RMFractalTileProjection *_mercatorToTileProjection;
     RMTileSourcesContainer *_tileSourcesContainer;
 
-    NSMutableSet *_annotations;
-    NSMutableSet *_visibleAnnotations;
+    NSMutableArray *_annotations;
+    NSMutableArray *_visibleAnnotations;
 
     BOOL _constrainMovement, _constrainMovementByUser;
     RMProjectedRect _constrainingProjectedBounds, _constrainingProjectedBoundsByUser;
@@ -183,6 +184,7 @@
     CGPoint _lastContentOffset, _accumulatedDelta;
     CGSize _lastContentSize;
     BOOL _mapScrollViewIsZooming;
+    BOOL _mapScrollViewIsScrolling;
 
     BOOL _draggingEnabled, _bouncingEnabled;
 
@@ -271,7 +273,9 @@
     _initialTileSourceMinZoomLevel = initialTileSourceMinZoomLevel;
     _constrainMovement = _constrainMovementByUser = _bouncingEnabled = _zoomingInPivotsAroundCenter = NO;
     _draggingEnabled = YES;
-
+    
+    _mapScrollViewIsScrolling = _mapScrollViewIsZooming = NO;
+    
     _draggedAnnotation = nil;
     _constrainingBox = _tilesConstrainingBox = _userConstrainingBox = kMapboxDefaultLatLonBoundingBox;
     _userLocationZoomBasedOnAccuracy = YES;
@@ -734,6 +738,9 @@
     _delegateHasDidUpdateUserLocation = [_delegate respondsToSelector:@selector(mapView:didUpdateUserLocation:)];
     _delegateHasDidFailToLocateUserWithError = [_delegate respondsToSelector:@selector(mapView:didFailToLocateUserWithError:)];
     _delegateHasDidChangeUserTrackingMode = [_delegate respondsToSelector:@selector(mapView:didChangeUserTrackingMode:animated:)];
+    
+    _delegateHasPrepareAnnotationCallout = [_delegate respondsToSelector:@selector(mapView:willShowCallout:forAnnotation:)];
+
 }
 
 - (void)registerMoveEventByUser:(BOOL)wasUserEvent
@@ -1495,6 +1502,7 @@
 
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView
 {
+    _mapScrollViewIsScrolling = YES;
     [self registerMoveEventByUser:YES];
 
     if (self.userTrackingMode != RMUserTrackingModeNone)
@@ -1503,8 +1511,12 @@
 
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate
 {
-    if ( ! decelerate)
+    if ( ! decelerate) {
+        _mapScrollViewIsScrolling = NO;
+        if (_delegateHasMapViewRegionDidChange && !_mapScrollViewIsScrolling && !_mapScrollViewIsZooming)
+            [_delegate mapViewRegionDidChange:self];
         [self completeMoveEventAfterDelay:0];
+    }
 }
 
 - (void)scrollViewWillBeginDecelerating:(UIScrollView *)scrollView
@@ -1515,11 +1527,17 @@
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView
 {
+    _mapScrollViewIsScrolling = NO;
+    if (_delegateHasMapViewRegionDidChange && !_mapScrollViewIsScrolling && !_mapScrollViewIsZooming)
+        [_delegate mapViewRegionDidChange:self];
     [self completeMoveEventAfterDelay:0];
 }
 
 - (void)scrollViewDidEndScrollingAnimation:(UIScrollView *)scrollView
 {
+    _mapScrollViewIsScrolling = NO;
+    if (_delegateHasMapViewRegionDidChange && !_mapScrollViewIsScrolling && !_mapScrollViewIsZooming)
+        [_delegate mapViewRegionDidChange:self];
     [self completeMoveEventAfterDelay:0];
 }
 
@@ -1535,21 +1553,22 @@
 
 - (void)scrollViewDidEndZooming:(UIScrollView *)scrollView withView:(UIView *)view atScale:(float)scale
 {
-    [self completeMoveEventAfterDelay:0];
     [self completeZoomEventAfterDelay:0];
 
-    _mapScrollViewIsZooming = NO;
 
     // slight jiggle fixes problems with UIScrollView
     // briefly allowing zoom beyond min
     //
     [self moveBy:CGSizeMake(-1, -1)];
     [self moveBy:CGSizeMake( 1,  1)];
+    _mapScrollViewIsZooming = NO;
 
     [self correctPositionOfAllAnnotations];
 
     if (_loadingTileView)
         _loadingTileView.mapZooming = NO;
+    if (_delegateHasMapViewRegionDidChange && !_mapScrollViewIsScrolling && !_mapScrollViewIsZooming)
+        [_delegate mapViewRegionDidChange:self];
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView
@@ -1703,6 +1722,11 @@
             else
                 [self correctPositionOfAllAnnotations];
         }
+        
+        if (!CGPointEqualToPoint(delta, CGPointZero)) {
+            if (_delegateHasMapViewRegionDidChange && !_mapScrollViewIsScrolling && !_mapScrollViewIsZooming)
+                [_delegate mapViewRegionDidChange:self];
+        }
     }
     else
     {
@@ -1725,13 +1749,14 @@
         }
 
         _lastZoom = _zoom;
+        if (_delegateHasMapViewRegionDidChange && !_mapScrollViewIsScrolling && !_mapScrollViewIsZooming)
+            [_delegate mapViewRegionDidChange:self];
     }
 
     _lastContentOffset = _mapScrollView.contentOffset;
     _lastContentSize = _mapScrollView.contentSize;
 
-    if (_delegateHasMapViewRegionDidChange)
-        [_delegate mapViewRegionDidChange:self];
+    
 }
 
 #pragma mark - Gesture Recognizers and event handling
