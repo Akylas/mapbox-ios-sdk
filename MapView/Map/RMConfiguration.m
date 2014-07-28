@@ -90,7 +90,7 @@ static RMConfiguration *RMConfigurationSharedInstance = nil;
 {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        RMConfigurationSharedInstance = [[RMConfiguration alloc] initWithPath:[[NSBundle mainBundle] pathForResource:@"routeme" ofType:@"plist"]];
+        RMConfigurationSharedInstance = [[RMConfiguration alloc] initWithPath:[[NSBundle mainBundle] pathForResource:@"mapbox" ofType:@"plist"]];
     });
 
     return RMConfigurationSharedInstance;
@@ -109,7 +109,7 @@ static RMConfiguration *RMConfigurationSharedInstance = nil;
         return self;
     }
 
-    RMLog(@"reading route-me configuration from %@", path);
+    RMLog(@"reading mapbox configuration from %@", path);
 
     NSError *error = nil;
     NSData *plistData = [NSData dataWithContentsOfFile:path];
@@ -121,7 +121,7 @@ static RMConfiguration *RMConfigurationSharedInstance = nil;
 
     if ( ! _propertyList)
     {
-        RMLog(@"problem reading route-me configuration from %@: %@", path, error);
+        RMLog(@"problem reading mapbox configuration from %@: %@", path, error);
     }
 
     return self;
