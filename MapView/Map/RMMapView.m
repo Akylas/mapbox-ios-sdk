@@ -183,8 +183,8 @@
     float _zoom, _lastZoom;
     CGPoint _lastContentOffset, _accumulatedDelta;
     CGSize _lastContentSize;
-    BOOL _mapScrollViewIsZooming;
-    BOOL _mapScrollViewIsScrolling;
+    int _mapScrollViewIsZooming;
+    int _mapScrollViewIsScrolling;
 
     BOOL _draggingEnabled, _bouncingEnabled;
 
@@ -274,7 +274,7 @@
     _constrainMovement = _constrainMovementByUser = _bouncingEnabled = _zoomingInPivotsAroundCenter = NO;
     _draggingEnabled = YES;
     
-    _mapScrollViewIsScrolling = _mapScrollViewIsZooming = NO;
+    _mapScrollViewIsScrolling = _mapScrollViewIsZooming = 0;
     
     _draggedAnnotation = nil;
     _constrainingBox = _tilesConstrainingBox = _userConstrainingBox = kMapboxDefaultLatLonBoundingBox;
@@ -971,6 +971,12 @@
 #pragma mark -
 #pragma mark Movement
 
+- (void)setContentOffset:(CGPoint)contentOffset animated:(BOOL)animated
+{
+    _mapScrollViewIsScrolling = animated;
+    [_mapScrollView setContentOffset:contentOffset animated:animated];
+}
+
 - (CLLocationCoordinate2D)centerCoordinate
 {
     return [_projection projectedPointToCoordinate:[self centerProjectedPoint]];
@@ -1020,8 +1026,9 @@
 	RMProjectedPoint normalizedProjectedPoint;
 	normalizedProjectedPoint.x = centerProjectedPoint.x + fabs(planetBounds.origin.x);
 	normalizedProjectedPoint.y = centerProjectedPoint.y + fabs(planetBounds.origin.y);
-
-    [_mapScrollView setContentOffset:CGPointMake(normalizedProjectedPoint.x / _metersPerPixel - _mapScrollView.bounds.size.width/2.0,
+    
+    
+    [self setContentOffset:CGPointMake(normalizedProjectedPoint.x / _metersPerPixel - _mapScrollView.bounds.size.width/2.0,
                                                 _mapScrollView.contentSize.height - ((normalizedProjectedPoint.y / _metersPerPixel) + _mapScrollView.bounds.size.height/2.0))
                            animated:animated];
 
@@ -1122,7 +1129,7 @@
 - (void)zoomToRect:(CGRect)rect duration:(NSTimeInterval)duration
 {
     _inFakeZoomAnimation = YES;
-    _mapScrollViewIsZooming = YES;
+    _mapScrollViewIsZooming += 1;
     [UIView animateWithDuration:duration delay:0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
         [_mapScrollView zoomToRect:rect animated:NO];
     } completion:^(BOOL finished) {
@@ -1403,7 +1410,7 @@
     [_mapScrollView removeObserver:self forKeyPath:@"contentOffset"];
     [_mapScrollView removeFromSuperview];  _mapScrollView = nil;
 
-    _mapScrollViewIsZooming = NO;
+    _mapScrollViewIsZooming = _mapScrollViewIsScrolling = 0;
 
     NSUInteger tileSideLength = [_tileSourcesContainer tileSideLength];
     CGSize contentSize = CGSizeMake(tileSideLength, tileSideLength); // zoom level 1
@@ -1490,6 +1497,14 @@
     [_visibleAnnotations removeAllObjects];
     [self correctPositionOfAllAnnotations];
 }
+
+
+-(void)onRegionChange
+{
+    if (_delegateHasMapViewRegionDidChange && !_mapScrollViewIsScrolling && !_mapScrollViewIsZooming)
+        [_delegate mapViewRegionDidChange:self];
+}
+
 -(void)setZoomScale:(CGFloat)zoom {
     CGSize size = _mapScrollView.contentSize;
     if (size.width != 0 && size.height != 0) {
@@ -1504,7 +1519,7 @@
 
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView
 {
-    _mapScrollViewIsScrolling = YES;
+    _mapScrollViewIsScrolling += 1;
     [self registerMoveEventByUser:YES];
 
     if (self.userTrackingMode != RMUserTrackingModeNone)
@@ -1514,9 +1529,8 @@
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate
 {
     if ( ! decelerate) {
-        _mapScrollViewIsScrolling = NO;
-        if (_delegateHasMapViewRegionDidChange && !_mapScrollViewIsScrolling && !_mapScrollViewIsZooming)
-            [_delegate mapViewRegionDidChange:self];
+        _mapScrollViewIsScrolling -= 1;
+        [self onRegionChange];
         [self completeMoveEventAfterDelay:0];
     }
 }
@@ -1524,22 +1538,20 @@
 - (void)scrollViewWillBeginDecelerating:(UIScrollView *)scrollView
 {
     if (_decelerationMode == RMMapDecelerationOff)
-        [scrollView setContentOffset:scrollView.contentOffset animated:NO];
+        [self setContentOffset:scrollView.contentOffset animated:NO];
 }
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView
 {
-    _mapScrollViewIsScrolling = NO;
-    if (_delegateHasMapViewRegionDidChange && !_mapScrollViewIsScrolling && !_mapScrollViewIsZooming)
-        [_delegate mapViewRegionDidChange:self];
+    _mapScrollViewIsScrolling -= 1;
+    [self onRegionChange];
     [self completeMoveEventAfterDelay:0];
 }
 
 - (void)scrollViewDidEndScrollingAnimation:(UIScrollView *)scrollView
 {
-    _mapScrollViewIsScrolling = NO;
-    if (_delegateHasMapViewRegionDidChange && !_mapScrollViewIsScrolling && !_mapScrollViewIsZooming)
-        [_delegate mapViewRegionDidChange:self];
+    _mapScrollViewIsScrolling -= 1;
+    [self onRegionChange];
     [self completeMoveEventAfterDelay:0];
 }
 
@@ -1547,7 +1559,7 @@
 {
     [self registerZoomEventByUser:(scrollView.pinchGestureRecognizer.state == UIGestureRecognizerStateBegan)];
 
-    _mapScrollViewIsZooming = YES;
+    _mapScrollViewIsZooming += 1;
 
     if (_loadingTileView)
         _loadingTileView.mapZooming = YES;
@@ -1563,14 +1575,13 @@
     //
     [self moveBy:CGSizeMake(-1, -1)];
     [self moveBy:CGSizeMake( 1,  1)];
-    _mapScrollViewIsZooming = NO;
+    _mapScrollViewIsZooming -= 1;
 
     [self correctPositionOfAllAnnotations];
 
     if (_loadingTileView)
         _loadingTileView.mapZooming = NO;
-    if (_delegateHasMapViewRegionDidChange && !_mapScrollViewIsScrolling && !_mapScrollViewIsZooming)
-        [_delegate mapViewRegionDidChange:self];
+    [self onRegionChange];
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView
@@ -1609,7 +1620,7 @@
         return;
 
     // The first offset during zooming out (animated) is always garbage
-    if (_mapScrollViewIsZooming == YES &&
+    if (_mapScrollViewIsZooming &&
         _mapScrollView.zooming == NO &&
         _lastContentSize.width > _mapScrollView.contentSize.width &&
         ((*aContentOffset).y - _lastContentOffset.y) == 0.0)
@@ -1679,7 +1690,7 @@
         return;
 
     // The first offset during zooming out (animated) is always garbage
-    if ( (_inFakeZoomAnimation || _mapScrollViewIsZooming == YES) &&
+    if ( (_inFakeZoomAnimation || _mapScrollViewIsZooming) &&
         _mapScrollView.zooming == NO &&
         (_lastContentSize.width > _mapScrollView.contentSize.width &&
         (newContentOffset.y - oldContentOffset.y) == 0.0))
@@ -1726,8 +1737,7 @@
         }
         
         if (!CGPointEqualToPoint(delta, CGPointZero)) {
-            if (_delegateHasMapViewRegionDidChange && !_mapScrollViewIsScrolling && !_mapScrollViewIsZooming)
-                [_delegate mapViewRegionDidChange:self];
+            [self onRegionChange];
         }
     }
     else
@@ -1751,8 +1761,7 @@
         }
 
         _lastZoom = _zoom;
-        if (_delegateHasMapViewRegionDidChange && !_mapScrollViewIsScrolling && !_mapScrollViewIsZooming)
-            [_delegate mapViewRegionDidChange:self];
+        [self onRegionChange];
     }
 
     _lastContentOffset = _mapScrollView.contentOffset;
@@ -2142,6 +2151,8 @@
     return _currentAnnotation;
 }
 
+
+
 - (NSTimeInterval)calloutView:(SMCalloutView *)calloutView delayForRepositionWithSize:(CGSize)offset
 {
     [self registerMoveEventByUser:NO];
@@ -2153,8 +2164,8 @@
 
     if (RMPostVersion7)
         contentOffset.y -= [[[self viewController] topLayoutGuide] length];
-
-    [_mapScrollView setContentOffset:contentOffset animated:YES];
+    
+    [self setContentOffset:contentOffset animated:YES];
 
     [self completeMoveEventAfterDelay:kSMCalloutViewRepositionDelayForUIScrollView];
 
