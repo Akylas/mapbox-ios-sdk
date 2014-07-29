@@ -1122,6 +1122,7 @@
 - (void)zoomToRect:(CGRect)rect duration:(NSTimeInterval)duration
 {
     _inFakeZoomAnimation = YES;
+    _mapScrollViewIsZooming = YES;
     [UIView animateWithDuration:duration delay:0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
         [_mapScrollView zoomToRect:rect animated:NO];
     } completion:^(BOOL finished) {
