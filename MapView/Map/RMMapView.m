@@ -2105,8 +2105,6 @@
             }
 
             _currentCallout.delegate = self;
-
-
             [_currentCallout presentCalloutFromRect:anAnnotation.layer.bounds
                                             inLayer:anAnnotation.layer
                                  constrainedToLayer:self.layer
@@ -2115,7 +2113,6 @@
 
         [self correctPositionOfAllAnnotations];
 
-        anAnnotation.layer.zPosition = _currentCallout.layer.zPosition = MAXFLOAT;
 
         if (_delegateHasDidSelectAnnotation)
             [_delegate mapView:self didSelectAnnotation:anAnnotation];
@@ -3112,6 +3109,7 @@
                 [self correctScreenPosition:annotation animated:animated];
 
 //            RMLog(@"%d annotations corrected", [visibleAnnotations count]);
+            [self correctOrderingOfAllAnnotations];
 
             [CATransaction commit];
 
@@ -3314,8 +3312,13 @@
 
     // bring any active callout annotation to the front
     //
-    if (_currentAnnotation)
-        _currentAnnotation.layer.zPosition = _currentCallout.layer.zPosition = MAXFLOAT;
+    if (_currentAnnotation) {
+        CGFloat zPosition = MAXFLOAT;
+        if (_currentCallout) {
+            _currentCallout.layer.zPosition = zPosition;
+        }
+        _currentAnnotation.layer.zPosition = zPosition -1;
+    }
 }
 
 - (NSArray *)annotations
