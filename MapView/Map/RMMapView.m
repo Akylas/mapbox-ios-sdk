@@ -183,8 +183,8 @@
     float _zoom, _lastZoom;
     CGPoint _lastContentOffset, _accumulatedDelta;
     CGSize _lastContentSize;
-    int _mapScrollViewIsZooming;
-    int _mapScrollViewIsScrolling;
+    BOOL _mapScrollViewIsZooming;
+    BOOL _mapScrollViewIsScrolling;
 
     BOOL _draggingEnabled, _bouncingEnabled;
 
@@ -274,7 +274,7 @@
     _constrainMovement = _constrainMovementByUser = _bouncingEnabled = _zoomingInPivotsAroundCenter = NO;
     _draggingEnabled = YES;
     
-    _mapScrollViewIsScrolling = _mapScrollViewIsZooming = 0;
+    _mapScrollViewIsScrolling = _mapScrollViewIsZooming = NO;
     
     _draggedAnnotation = nil;
     _constrainingBox = _tilesConstrainingBox = _userConstrainingBox = kMapboxDefaultLatLonBoundingBox;
@@ -1129,7 +1129,7 @@
 - (void)zoomToRect:(CGRect)rect duration:(NSTimeInterval)duration
 {
     _inFakeZoomAnimation = YES;
-    _mapScrollViewIsZooming += 1;
+    _mapScrollViewIsZooming = YES;
     [UIView animateWithDuration:duration delay:0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
         [_mapScrollView zoomToRect:rect animated:NO];
     } completion:^(BOOL finished) {
@@ -1410,7 +1410,7 @@
     [_mapScrollView removeObserver:self forKeyPath:@"contentOffset"];
     [_mapScrollView removeFromSuperview];  _mapScrollView = nil;
 
-    _mapScrollViewIsZooming = _mapScrollViewIsScrolling = 0;
+    _mapScrollViewIsZooming = _mapScrollViewIsScrolling = NO;
 
     NSUInteger tileSideLength = [_tileSourcesContainer tileSideLength];
     CGSize contentSize = CGSizeMake(tileSideLength, tileSideLength); // zoom level 1
@@ -1519,7 +1519,7 @@
 
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView
 {
-    _mapScrollViewIsScrolling += 1;
+    _mapScrollViewIsScrolling = YES;
     [self registerMoveEventByUser:YES];
 
     if (self.userTrackingMode != RMUserTrackingModeNone)
@@ -1529,7 +1529,7 @@
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate
 {
     if ( ! decelerate) {
-        _mapScrollViewIsScrolling -= 1;
+        _mapScrollViewIsScrolling = NO; //scrollView.isTracking still returns true :s
         [self onRegionChange];
         [self completeMoveEventAfterDelay:0];
     }
@@ -1543,14 +1543,14 @@
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView
 {
-    _mapScrollViewIsScrolling -= 1;
+    _mapScrollViewIsScrolling = scrollView.isDecelerating || scrollView.isTracking;
     [self onRegionChange];
     [self completeMoveEventAfterDelay:0];
 }
 
 - (void)scrollViewDidEndScrollingAnimation:(UIScrollView *)scrollView
 {
-    _mapScrollViewIsScrolling -= 1;
+    _mapScrollViewIsScrolling = scrollView.isDecelerating || scrollView.isTracking;
     [self onRegionChange];
     [self completeMoveEventAfterDelay:0];
 }
@@ -1558,8 +1558,8 @@
 - (void)scrollViewWillBeginZooming:(UIScrollView *)scrollView withView:(UIView *)view
 {
     [self registerZoomEventByUser:(scrollView.pinchGestureRecognizer.state == UIGestureRecognizerStateBegan)];
-
-    _mapScrollViewIsZooming += 1;
+    
+    _mapScrollViewIsZooming = YES;
 
     if (_loadingTileView)
         _loadingTileView.mapZooming = YES;
@@ -1575,7 +1575,7 @@
     //
     [self moveBy:CGSizeMake(-1, -1)];
     [self moveBy:CGSizeMake( 1,  1)];
-    _mapScrollViewIsZooming -= 1;
+    _mapScrollViewIsZooming = scrollView.isZooming;
 
     [self correctPositionOfAllAnnotations];
 
