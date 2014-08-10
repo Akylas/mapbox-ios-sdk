@@ -302,6 +302,7 @@
 {
     if (dragState == RMMapLayerDragStateStarting)
     {
+        [super setDragState:dragState animated:animated];
         [CATransaction begin];
         [CATransaction setAnimationDuration:(animated ? 0.3 : 0)];
 
@@ -317,6 +318,7 @@
     }
     else if (dragState == RMMapLayerDragStateCanceling || dragState == RMMapLayerDragStateEnding)
     {
+        [super setDragState:dragState animated:animated];
         [CATransaction begin];
         [CATransaction setAnimationDuration:(animated ? 0.3 : 0)];
 

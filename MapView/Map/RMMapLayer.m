@@ -99,23 +99,24 @@
 - (void)setDragState:(RMMapLayerDragState)dragState animated:(BOOL)animated
 {
     RMMapLayerDragState oldDragState = _dragState;
-
-    if (dragState == RMMapLayerDragStateStarting)
-    {
-        _dragState = RMMapLayerDragStateDragging;
-    }
-    else if (dragState == RMMapLayerDragStateDragging)
-    {
-        _dragState = RMMapLayerDragStateDragging;
-    }
-    else if (dragState == RMMapLayerDragStateCanceling || dragState == RMMapLayerDragStateEnding)
-    {
-        _dragState = RMMapLayerDragStateNone;
-    }
-    else if (dragState == RMMapLayerDragStateNone)
-    {
-        _dragState = RMMapLayerDragStateNone;
-    }
+    _dragState = dragState;
+//
+//    if (dragState == RMMapLayerDragStateStarting)
+//    {
+//        _dragState = RMMapLayerDragStateDragging;
+//    }
+//    else if (dragState == RMMapLayerDragStateDragging)
+//    {
+//        _dragState = RMMapLayerDragStateDragging;
+//    }
+//    else if (dragState == RMMapLayerDragStateCanceling || dragState == RMMapLayerDragStateEnding)
+//    {
+//        _dragState = RMMapLayerDragStateNone;
+//    }
+//    else if (dragState == RMMapLayerDragStateNone)
+//    {
+//        _dragState = RMMapLayerDragStateNone;
+//    }
 
     if (_dragState != oldDragState)
         [self.annotation.mapView annotation:self.annotation didChangeDragState:_dragState fromOldState:oldDragState];

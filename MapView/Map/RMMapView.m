@@ -1894,7 +1894,7 @@
 
         CGPoint centerPoint = [self convertPoint:self.center fromView:self.superview];
 
-        if (self.userTrackingMode != RMUserTrackingModeNone)
+        if (self.userTrackingMode != RMUserTrackingModeNone && self.userLocation.location)
             centerPoint = [self coordinateToPixel:self.userLocation.location.coordinate];
 
         [self zoomOutToNextNativeZoomAt:centerPoint animated:YES];
@@ -1962,9 +1962,9 @@
         {
             // cancel & go back to start point
             //
-            [_draggedAnnotation.layer setDragState:RMMapLayerDragStateCanceling animated:YES];
-
             _draggedAnnotation.position = [self coordinateToPixel:_draggedAnnotation.coordinate];
+
+            [_draggedAnnotation.layer setDragState:RMMapLayerDragStateCanceling animated:YES];
 
             [self correctOrderingOfAllAnnotations];
 
@@ -1974,9 +1974,9 @@
         {
             // complete drag & update coordinate
             //
-            [_draggedAnnotation.layer setDragState:RMMapLayerDragStateEnding animated:YES];
-
             _draggedAnnotation.coordinate = [self pixelToCoordinate:_draggedAnnotation.position];
+            
+            [_draggedAnnotation.layer setDragState:RMMapLayerDragStateEnding animated:YES];
 
             [self correctOrderingOfAllAnnotations];
 
@@ -2044,7 +2044,7 @@
     {
         [self deselectAnnotation:_currentAnnotation animated:animated];
     }
-    else if (anAnnotation.isEnabled && ! [anAnnotation isEqual:_currentAnnotation])
+    else if (anAnnotation.isEnabled)
     {
         self.userTrackingMode = RMUserTrackingModeNone;
 
