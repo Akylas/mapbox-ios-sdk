@@ -182,4 +182,9 @@
     return image;
 }
 
+-(BOOL)onNetworkChange:(BOOL)connected
+{
+    return NO;
+}
+
 @end

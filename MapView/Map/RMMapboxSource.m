@@ -38,10 +38,14 @@
 #import "RMConfiguration.h"
 
 @interface RMMapboxSource ()
+{
+    RMMapView *_mapView;
+}
 
 @property (nonatomic, strong) NSDictionary *infoDictionary;
 @property (nonatomic, strong) NSString *tileJSON;
 @property (nonatomic, strong) NSString *uniqueTilecacheKey;
+@property (nonatomic, strong) NSString *mapId;
 
 @end
 
@@ -71,77 +75,80 @@
     return [self initWithTileJSON:tileJSON enablingDataOnMapView:nil];
 }
 
+-(void)setupFromJSON:(NSString *)tileJSON {
+    if (!tileJSON) return;
+    _tileJSON = tileJSON;
+    _dataQueue = dispatch_queue_create(nil, DISPATCH_QUEUE_SERIAL);
+    _infoDictionary = (NSDictionary *)[NSJSONSerialization JSONObjectWithData:[tileJSON dataUsingEncoding:NSUTF8StringEncoding]
+                                                                      options:0
+                                                                        error:nil];
+    
+    if ([_infoDictionary[@"id"] hasPrefix:@"examples."]) {
+        RMLog(@"Using watermarked example map ID %@. Please go to http://mapbox.com and create your own map style.", _infoDictionary[@"id"]);
+    }
+    
+    _uniqueTilecacheKey = [NSString stringWithFormat:@"Mapbox-%@%@", [_infoDictionary objectForKey:@"id"], ([_infoDictionary objectForKey:@"version"] ? [@"-" stringByAppendingString:[_infoDictionary objectForKey:@"version"]] : @"")];
+    
+    id dataObject = nil;
+    
+    if (_mapView && (dataObject = [_infoDictionary objectForKey:@"data"]) && dataObject)
+    {
+        dispatch_async(_dataQueue, ^(void)
+                       {
+                           if ([dataObject isKindOfClass:[NSArray class]] && [[dataObject objectAtIndex:0] isKindOfClass:[NSString class]])
+                           {
+                               NSURL *dataURL = [NSURL URLWithString:[dataObject objectAtIndex:0]];
+                               
+                               NSMutableString *jsonString = nil;
+                               
+                               if (dataURL && (jsonString = [NSMutableString brandedStringWithContentsOfURL:dataURL encoding:NSUTF8StringEncoding error:nil]) && jsonString)
+                               {
+                                   if ([jsonString hasPrefix:@"grid("])
+                                   {
+                                       [jsonString replaceCharactersInRange:NSMakeRange(0, 5)                       withString:@""];
+                                       [jsonString replaceCharactersInRange:NSMakeRange([jsonString length] - 2, 2) withString:@""];
+                                   }
+                                   
+                                   id jsonObject = nil;
+                                   
+                                   if ((jsonObject = [NSJSONSerialization JSONObjectWithData:[jsonString dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil]) && [jsonObject isKindOfClass:[NSDictionary class]])
+                                   {
+                                       for (NSDictionary *feature in [jsonObject objectForKey:@"features"])
+                                       {
+                                           NSDictionary *properties = [feature objectForKey:@"properties"];
+                                           
+                                           CLLocationCoordinate2D coordinate = {
+                                               .longitude = [[[[feature objectForKey:@"geometry"] objectForKey:@"coordinates"] objectAtIndex:0] floatValue],
+                                               .latitude  = [[[[feature objectForKey:@"geometry"] objectForKey:@"coordinates"] objectAtIndex:1] floatValue]
+                                           };
+                                           
+                                           RMAnnotation *annotation = nil;
+                                           
+                                           if ([_mapView.delegate respondsToSelector:@selector(mapView:layerForAnnotation:)])
+                                               annotation = [RMAnnotation annotationWithMapView:_mapView coordinate:coordinate andTitle:[properties objectForKey:@"title"]];
+                                           else
+                                               annotation = [RMPointAnnotation annotationWithMapView:_mapView coordinate:coordinate andTitle:[properties objectForKey:@"title"]];
+                                           
+                                           annotation.userInfo = properties;
+                                           
+                                           dispatch_async(dispatch_get_main_queue(), ^(void)
+                                                          {
+                                                              [_mapView addAnnotation:annotation];
+                                                          });
+                                       }
+                                   }
+                               }
+                           }
+                       });            
+    }
+}
+
 - (id)initWithTileJSON:(NSString *)tileJSON enablingDataOnMapView:(RMMapView *)mapView
 {
     if (self = [super init])
     {
-        _dataQueue = dispatch_queue_create(nil, DISPATCH_QUEUE_SERIAL);
-
-        _infoDictionary = (NSDictionary *)[NSJSONSerialization JSONObjectWithData:[tileJSON dataUsingEncoding:NSUTF8StringEncoding]
-                                                                          options:0
-                                                                            error:nil];
-        if ( ! _infoDictionary)
-            return nil;
-
-        _tileJSON = tileJSON;
-
-        if ([_infoDictionary[@"id"] hasPrefix:@"examples."])
-            RMLog(@"Using watermarked example map ID %@. Please go to http://mapbox.com and create your own map style.", _infoDictionary[@"id"]);
-
-        _uniqueTilecacheKey = [NSString stringWithFormat:@"Mapbox-%@%@", [_infoDictionary objectForKey:@"id"], ([_infoDictionary objectForKey:@"version"] ? [@"-" stringByAppendingString:[_infoDictionary objectForKey:@"version"]] : @"")];
-
-        id dataObject = nil;
-        
-        if (mapView && (dataObject = [_infoDictionary objectForKey:@"data"]) && dataObject)
-        {
-            dispatch_async(_dataQueue, ^(void)
-            {
-                if ([dataObject isKindOfClass:[NSArray class]] && [[dataObject objectAtIndex:0] isKindOfClass:[NSString class]])
-                {
-                    NSURL *dataURL = [NSURL URLWithString:[dataObject objectAtIndex:0]];
-                    
-                    NSMutableString *jsonString = nil;
-                    
-                    if (dataURL && (jsonString = [NSMutableString brandedStringWithContentsOfURL:dataURL encoding:NSUTF8StringEncoding error:nil]) && jsonString)
-                    {
-                        if ([jsonString hasPrefix:@"grid("])
-                        {
-                            [jsonString replaceCharactersInRange:NSMakeRange(0, 5)                       withString:@""];
-                            [jsonString replaceCharactersInRange:NSMakeRange([jsonString length] - 2, 2) withString:@""];
-                        }
-                        
-                        id jsonObject = nil;
-                        
-                        if ((jsonObject = [NSJSONSerialization JSONObjectWithData:[jsonString dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil]) && [jsonObject isKindOfClass:[NSDictionary class]])
-                        {
-                            for (NSDictionary *feature in [jsonObject objectForKey:@"features"])
-                            {
-                                NSDictionary *properties = [feature objectForKey:@"properties"];
-                                
-                                CLLocationCoordinate2D coordinate = {
-                                    .longitude = [[[[feature objectForKey:@"geometry"] objectForKey:@"coordinates"] objectAtIndex:0] floatValue],
-                                    .latitude  = [[[[feature objectForKey:@"geometry"] objectForKey:@"coordinates"] objectAtIndex:1] floatValue]
-                                };
-
-                                RMAnnotation *annotation = nil;
-
-                                if ([mapView.delegate respondsToSelector:@selector(mapView:layerForAnnotation:)])
-                                    annotation = [RMAnnotation annotationWithMapView:mapView coordinate:coordinate andTitle:[properties objectForKey:@"title"]];
-                                else
-                                    annotation = [RMPointAnnotation annotationWithMapView:mapView coordinate:coordinate andTitle:[properties objectForKey:@"title"]];
-                                
-                                annotation.userInfo = properties;
-                                
-                                dispatch_async(dispatch_get_main_queue(), ^(void)
-                                {
-                                    [mapView addAnnotation:annotation];
-                                });
-                            }
-                        }
-                    }
-                }
-            });            
-        }
+        _mapView = mapView;
+        [self setupFromJSON:tileJSON];
     }
     
     return self;
@@ -150,6 +157,24 @@
 - (id)initWithReferenceURL:(NSURL *)referenceURL
 {
     return [self initWithReferenceURL:referenceURL enablingDataOnMapView:nil];
+}
+
+-(void)getTileJSON
+{
+    if (self.infoDictionary) return; //already done
+    id dataObject = nil;
+    NSURL* referenceURL = [self tileJSONURL];
+    
+    if ([[referenceURL pathExtension] isEqualToString:@"jsonp"])
+        referenceURL = [NSURL URLWithString:[[referenceURL absoluteString] stringByReplacingOccurrencesOfString:@".jsonp"
+                                                                                                     withString:@".json"
+                                                                                                        options:NSAnchoredSearch & NSBackwardsSearch
+                                                                                                          range:NSMakeRange(0, [[referenceURL absoluteString] length])]];
+    
+    if ([[referenceURL pathExtension] isEqualToString:@"json"]) {
+        dataObject = [NSString brandedStringWithContentsOfURL:referenceURL encoding:NSUTF8StringEncoding error:nil];
+    }
+    [self setupFromJSON:dataObject];
 }
 
 - (id)initWithReferenceURL:(NSURL *)referenceURL enablingDataOnMapView:(RMMapView *)mapView
@@ -162,10 +187,11 @@
                                                                                                         options:NSAnchoredSearch & NSBackwardsSearch
                                                                                                           range:NSMakeRange(0, [[referenceURL absoluteString] length])]];
     
-    if ([[referenceURL pathExtension] isEqualToString:@"json"] && (dataObject = [NSString brandedStringWithContentsOfURL:referenceURL encoding:NSUTF8StringEncoding error:nil]) && dataObject)
-        return [self initWithTileJSON:dataObject enablingDataOnMapView:mapView];
+    if ([[referenceURL pathExtension] isEqualToString:@"json"]) {
+        dataObject = [NSString brandedStringWithContentsOfURL:referenceURL encoding:NSUTF8StringEncoding error:nil];
+    }
 
-    return nil;
+    return [self initWithTileJSON:dataObject enablingDataOnMapView:mapView];
 }
 
 - (id)initWithMapID:(NSString *)mapID enablingDataOnMapView:(RMMapView *)mapView
@@ -175,9 +201,13 @@
 
 - (id)initWithMapID:(NSString *)mapID enablingDataOnMapView:(RMMapView *)mapView enablingSSL:(BOOL)enableSSL
 {
-    NSString *referenceURLString = [NSString stringWithFormat:@"http%@://api.tiles.mapbox.com/v3/%@.json%@", (enableSSL ? @"s" : @""), mapID, (enableSSL ? @"?secure" : @"")];
-
-    return [self initWithReferenceURL:[NSURL URLWithString:referenceURLString] enablingDataOnMapView:mapView];
+    self.mapId = mapID;
+    if (self = [super init])
+    {
+        _mapView = mapView;
+        [self getTileJSON];
+    }
+    return self;
 }
 
 - (void)dealloc
@@ -188,11 +218,21 @@
 
 #pragma mark 
 
+
+-(BOOL)onNetworkChange:(BOOL)connected
+{
+    if (connected && !self.infoDictionary) {
+        [self getTileJSON];
+        return YES;
+    }
+    return NO;
+}
+
 - (NSURL *)tileJSONURL
 {
     BOOL useSSL = [[[self.infoDictionary objectForKey:@"tiles"] objectAtIndex:0] hasPrefix:@"https"];
 
-    return [NSURL URLWithString:[NSString stringWithFormat:@"http%@://api.tiles.mapbox.com/v3/%@.json%@", (useSSL ? @"s" : @""), [self.infoDictionary objectForKey:@"id"], (useSSL ? @"?secure" : @"")]];
+    return [NSURL URLWithString:[NSString stringWithFormat:@"http%@://api.tiles.mapbox.com/v3/%@.json%@", (useSSL ? @"s" : @""), self.mapId, (useSSL ? @"?secure" : @"")]];
 }
 
 - (NSURL *)URLForTile:(RMTile)tile
@@ -279,12 +319,18 @@
 
 - (float)minZoom
 {
-    return [[self.infoDictionary objectForKey:@"minzoom"] floatValue];
+    if (self.infoDictionary) {
+        return [[self.infoDictionary objectForKey:@"minzoom"] floatValue];
+    }
+    return kDefaultMinTileZoom;
 }
 
 - (float)maxZoom
 {
-    return [[self.infoDictionary objectForKey:@"maxzoom"] floatValue];
+    if (self.infoDictionary) {
+        return [[self.infoDictionary objectForKey:@"maxzoom"] floatValue];
+    }
+    return kDefaultMaxTileZoom;
 }
 
 - (RMSphericalTrapezium)latitudeLongitudeBoundingBox
@@ -296,7 +342,7 @@
     if ([bounds isKindOfClass:[NSArray class]])
         parts = bounds;
 
-    else
+    else if([bounds isKindOfClass:[NSString class]])
         parts = [bounds componentsSeparatedByString:@","];
 
     if ([parts count] == 4)

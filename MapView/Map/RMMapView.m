@@ -230,6 +230,8 @@
     
     BOOL _userLocationZoomBasedOnAccuracy;
     float _userLocationRequiredZoom;
+    
+    BOOL _forceUpdate;
 }
 
 @synthesize decelerationMode = _decelerationMode;
@@ -273,6 +275,7 @@
     _initialTileSourceMinZoomLevel = initialTileSourceMinZoomLevel;
     _constrainMovement = _constrainMovementByUser = _bouncingEnabled = _zoomingInPivotsAroundCenter = NO;
     _draggingEnabled = YES;
+    _forceUpdate = NO;
     
     _mapScrollViewIsScrolling = _mapScrollViewIsZooming = NO;
     
@@ -427,6 +430,7 @@
     CGRect r = self.frame;
     RMProjectedRect projection = [self projectedBounds];
     [super setFrame:frame];
+    
     
     // only change if the frame changes and not during initialization
     if ( ! CGRectEqualToRect(r, frame))
@@ -996,7 +1000,10 @@
 
 - (RMProjectedPoint)centerProjectedPoint
 {
-    CGPoint center = CGPointMake(_mapScrollView.contentOffset.x + _mapScrollView.bounds.size.width/2.0, _mapScrollView.contentSize.height - (_mapScrollView.contentOffset.y + _mapScrollView.bounds.size.height/2.0));
+    CGPoint contentOffset = _mapScrollView.contentOffset;
+    CGSize contentSize = _mapScrollView.contentSize;
+    CGRect bounds = _mapScrollView.bounds;
+    CGPoint center = CGPointMake(contentOffset.x + bounds.size.width/2.0, contentSize.height - (contentOffset.y + bounds.size.height/2.0));
 
     RMProjectedRect planetBounds = _projection.planetBounds;
     RMProjectedPoint normalizedProjectedPoint;
@@ -1015,7 +1022,7 @@
 
 - (void)setCenterProjectedPoint:(RMProjectedPoint)centerProjectedPoint animated:(BOOL)animated
 {
-    if (RMProjectedPointEqualToProjectedPoint(centerProjectedPoint, [self centerProjectedPoint]))
+    if (!_forceUpdate && RMProjectedPointEqualToProjectedPoint(centerProjectedPoint, [self centerProjectedPoint]))
         return;
 
     [self registerMoveEventByUser:NO];
@@ -1092,7 +1099,7 @@
 
 - (void)setProjectedBounds:(RMProjectedRect)boundsRect animated:(BOOL)animated
 {
-    if (RMProjectedRectEqualToProjectedRect(boundsRect, [self projectedBounds]))
+    if (!_forceUpdate && RMProjectedRectEqualToProjectedRect(boundsRect, [self projectedBounds]))
         return;
     
     if (_constrainMovement)
@@ -1464,7 +1471,7 @@
     _overlayView.userInteractionEnabled = NO;
 
     [self insertSubview:_overlayView aboveSubview:_mapScrollView];
-
+    
     // add gesture recognizers
 
     // one finger taps
@@ -2319,29 +2326,28 @@
     
     _mercatorToTileProjection = [_tileSourcesContainer mercatorToTileProjection];
     
-    if (_lastContentSize.width == 0 || _lastContentSize.height == 0) {
-        
-    }
+    [self setTileSourcesMinZoom:_tileSourcesContainer.minZoom];
+    [self setTileSourcesMaxZoom:_tileSourcesContainer.maxZoom];
+    
+    _forceUpdate = YES;
     
     if ([_tileSourcesContainer.tileSources count] == 0)
     {
         _constrainMovement = NO;
+        [self setProjectedBounds:[self projectedBounds]];
     }
     else
     {
         [self setTileSourcesConstraintsFromLatitudeLongitudeBoundingBox:[_tileSourcesContainer latitudeLongitudeBoundingBox]];
     }
-    
-    [self setTileSourcesMinZoom:_tileSourcesContainer.minZoom];
-    [self setTileSourcesMaxZoom:_tileSourcesContainer.maxZoom];
+
     [self setZoom:[self zoom]]; // setZoom clamps zoom level to min/max limits
-    
-    
-    [self setCenterProjectedPoint:centerPoint animated:NO];
+//    [self setCenterProjectedPoint:centerPoint animated:NO];
     for (RMMapTiledLayerView *tiledLayerView in _tiledLayersSuperview.subviews)
     {
         [tiledLayerView.layer setNeedsDisplay];
     }
+    _forceUpdate = NO;
 }
 
 - (void)addTileSource:(id<RMTileSource>)newTileSource atIndex:(NSUInteger)index
@@ -2660,6 +2666,16 @@
     [self setMaxZoom:tileSourcesMaxZoom];
 }
 
+-(BOOL)isZooming
+{
+    return _mapScrollViewIsZooming;
+}
+
+-(BOOL)isScrolling
+{
+    return _mapScrollViewIsScrolling;
+}
+
 - (float)zoom
 {
     return _zoom;
@@ -2670,7 +2686,7 @@
 {
     newZoom = (newZoom > _maxZoom) ? _maxZoom : newZoom;
     newZoom = (newZoom < _minZoom) ? _minZoom : newZoom;
-    if (_zoom == newZoom)
+    if (!_forceUpdate && _zoom == newZoom)
         return;
 
     [self registerZoomEventByUser:NO];
