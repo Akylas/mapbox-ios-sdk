@@ -39,16 +39,13 @@
 #import "RMTileCacheDownloadOperation.h"
 
 
-@interface CATiledLayer(additions)
-- (void) setNeedsDisplayInRect:(CGRect)r levelOfDetail:(int)level;
-@end
-
 
 @implementation RMMapTiledLayerView
 {
     RMMapView *_mapView;
     id <RMTileSource> _tileSource;
     NSOperationQueue* _backgroundFetchQueue;
+    CGFloat _currentZoom;
 }
 
 @synthesize useSnapshotRenderer = _useSnapshotRenderer;
@@ -64,11 +61,13 @@
     return (CATiledLayer *)self.layer;
 }
 
+
 - (id)initWithFrame:(CGRect)frame mapView:(RMMapView *)aMapView forTileSource:(id <RMTileSource>)aTileSource
 {
     if (!(self = [super initWithFrame:frame]))
         return nil;
     
+    _currentZoom = -1;
     self.opaque = NO;
     _mapView = aMapView;
     _tileSource = aTileSource;
@@ -98,6 +97,7 @@
     self.contentScaleFactor = 1.0f;
 }
 
+
 - (void)drawLayer:(CALayer *)layer inContext:(CGContextRef)context {
     CGRect rect = CGContextGetClipBoundingBox(context);
     CGRect bounds = self.bounds;
@@ -111,6 +111,11 @@
         zoom--;
         x >>= 1;
         y >>= 1;
+    }
+    
+    if (fabs(zoom -  _currentZoom) >= 1) {
+        [self cancelBackgroundOperations];
+        _currentZoom = zoom;
     }
     
     RMTile tile = RMTileMake(x, y, zoom);
