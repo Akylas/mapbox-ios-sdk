@@ -57,7 +57,7 @@
 
 - (id)init
 {
-    return [self initWithReferenceURL:[NSURL fileURLWithPath:[RMMapView pathForBundleResourceNamed:kMapboxPlaceholderMapID ofType:@"json"]]];
+    return [self initWithMapID:kMapboxPlaceholderMapID];
 }
 
 - (id)initWithMapID:(NSString *)mapID
@@ -162,7 +162,7 @@
 -(void)getTileJSON
 {
     if (self.infoDictionary) return; //already done
-    id dataObject = nil;
+    NSString* dataObject = nil;
     NSURL* referenceURL = [self tileJSONURL];
     
     if ([[referenceURL pathExtension] isEqualToString:@"jsonp"])
@@ -172,26 +172,9 @@
                                                                                                           range:NSMakeRange(0, [[referenceURL absoluteString] length])]];
     
     if ([[referenceURL pathExtension] isEqualToString:@"json"]) {
-        dataObject = [NSString brandedStringWithContentsOfURL:referenceURL encoding:NSUTF8StringEncoding error:nil];
+        dataObject = [NSString brandedStringWithContentsOfURL:referenceURL encoding:NSUTF8StringEncoding error:nil] ;
     }
     [self setupFromJSON:dataObject];
-}
-
-- (id)initWithReferenceURL:(NSURL *)referenceURL enablingDataOnMapView:(RMMapView *)mapView
-{
-    id dataObject = nil;
-    
-    if ([[referenceURL pathExtension] isEqualToString:@"jsonp"])
-        referenceURL = [NSURL URLWithString:[[referenceURL absoluteString] stringByReplacingOccurrencesOfString:@".jsonp" 
-                                                                                                     withString:@".json"
-                                                                                                        options:NSAnchoredSearch & NSBackwardsSearch
-                                                                                                          range:NSMakeRange(0, [[referenceURL absoluteString] length])]];
-    
-    if ([[referenceURL pathExtension] isEqualToString:@"json"]) {
-        dataObject = [NSString brandedStringWithContentsOfURL:referenceURL encoding:NSUTF8StringEncoding error:nil];
-    }
-
-    return [self initWithTileJSON:dataObject enablingDataOnMapView:mapView];
 }
 
 - (id)initWithMapID:(NSString *)mapID enablingDataOnMapView:(RMMapView *)mapView

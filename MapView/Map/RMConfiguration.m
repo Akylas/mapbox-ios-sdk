@@ -46,13 +46,27 @@ static RMConfiguration *RMConfigurationSharedInstance = nil;
 
 @implementation NSData (RMUserAgent)
 
-+ (instancetype)brandedDataWithContentsOfURL:(NSURL *)aURL
++ (instancetype)brandedDataWithContentsOfURL:(NSURL *)url
 {
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:aURL];
-
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
     [request setValue:[[RMConfiguration configuration] userAgent] forHTTPHeaderField:@"User-Agent"];
+    
+    
+    NSHTTPURLResponse *response = nil;
+    NSCachedURLResponse *cachedURLResponse = [[NSURLCache sharedURLCache] cachedResponseForRequest:request];
+    NSData *returnData = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:nil];
+    if (!returnData) {
+        if(cachedURLResponse && cachedURLResponse != (id)[NSNull null])
+        {
+            returnData = [cachedURLResponse data];
+        }
+    }
+    else {
+        cachedURLResponse = [[NSCachedURLResponse alloc] initWithResponse:response data:returnData userInfo:nil storagePolicy:NSURLCacheStorageAllowed];
+        [[NSURLCache sharedURLCache] storeCachedResponse:cachedURLResponse forRequest:request];
+    }
 
-    return [NSURLConnection sendSynchronousRequest:request returningResponse:nil error:nil];
+    return returnData;
 }
 
 @end
@@ -63,12 +77,7 @@ static RMConfiguration *RMConfigurationSharedInstance = nil;
 
 + (instancetype)brandedStringWithContentsOfURL:(NSURL *)url encoding:(NSStringEncoding)enc error:(NSError **)error
 {
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
-
-    [request setValue:[[RMConfiguration configuration] userAgent] forHTTPHeaderField:@"User-Agent"];
-
-    NSData *returnData = [NSURLConnection sendSynchronousRequest:request returningResponse:nil error:error];
-
+    NSData *returnData = [NSData brandedDataWithContentsOfURL:url];
     if ( ! returnData)
         return nil;
 
