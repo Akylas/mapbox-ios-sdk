@@ -30,6 +30,12 @@
 
 #import "RMCompositeSource.h"
 
+#import "RMMapView.h"
+
+@interface RMMapView()
+-(void)updateAfterSourceChange;
+@end
+
 @implementation RMTileSourcesContainer
 {
     NSMutableArray *_tileSources;
@@ -93,6 +99,39 @@
         });
     }
 
+    [_tileSourcesLock unlock];
+}
+
+- (void)updateAllFromTileSources
+{
+    [_tileSourcesLock lock];
+    
+    _latitudeLongitudeBoundingBox = ((RMSphericalTrapezium) {
+        .northEast = {.latitude = INT_MIN, .longitude = INT_MIN},
+        .southWest = {.latitude = INT_MAX, .longitude = INT_MAX}
+    });
+    
+    _minZoom = kRMTileSourcesContainerMinZoom;
+    _maxZoom = kRMTileSourcesContainerMaxZoom;
+    
+    for (id <RMTileSource>tileSource in _tileSources)
+    {
+        RMSphericalTrapezium newLatitudeLongitudeBoundingBox = [tileSource latitudeLongitudeBoundingBox];
+        
+        _latitudeLongitudeBoundingBox = ((RMSphericalTrapezium) {
+            .northEast = {
+                .latitude = MAX(_latitudeLongitudeBoundingBox.northEast.latitude, newLatitudeLongitudeBoundingBox.northEast.latitude),
+                .longitude = MAX(_latitudeLongitudeBoundingBox.northEast.longitude, newLatitudeLongitudeBoundingBox.northEast.longitude)},
+            .southWest = {
+                .latitude = MIN(_latitudeLongitudeBoundingBox.southWest.latitude, newLatitudeLongitudeBoundingBox.southWest.latitude),
+                .longitude = MIN(_latitudeLongitudeBoundingBox.southWest.longitude, newLatitudeLongitudeBoundingBox.southWest.longitude)
+            }
+        });
+        
+        _minZoom = MAX(_minZoom, [tileSource minZoom]);
+        _maxZoom = MIN(_maxZoom, [tileSource maxZoom]);
+    }
+    
     [_tileSourcesLock unlock];
 }
 
@@ -176,12 +215,24 @@
     return [self addTileSource:tileSource atIndex:-1];
 }
 
+-(void)sourceUpdated:(id<RMTileSource>)tileSource inMapView:(RMMapView*)mapView
+{
+    if ( ! tileSource) return;
+    [self updateAllFromTileSources];
+    if (mapView) {
+        [mapView updateAfterSourceChange];
+    }
+}
+
 - (BOOL)addTileSource:(id<RMTileSource>)tileSource atIndex:(NSUInteger)index
 {
     if ( ! tileSource)
         return NO;
     
     [_tileSourcesLock lock];
+    
+    tileSource.sourceContainer = self;
+    
 
     RMProjection *newProjection = [tileSource projection];
     RMFractalTileProjection *newFractalTileProjection = [tileSource mercatorToTileProjection];
@@ -237,6 +288,7 @@
     [_tileSourcesLock lock];
 
     [_tileSources removeObject:tileSource];
+    tileSource.sourceContainer = nil;
 
 //    RMLog(@"Removed the tilesource '%@' from the container", [tileSource shortName]);
 
@@ -260,6 +312,8 @@
 
     id <RMTileSource> tileSource = [_tileSources objectAtIndex:index];
     [tileSource cancelAllDownloads];
+    
+    tileSource.sourceContainer = nil;
     [_tileSources removeObject:tileSource];
 
 //    RMLog(@"Removed the tilesource '%@' from the container", [tileSource shortName]);
@@ -301,6 +355,9 @@
     [_tileSourcesLock lock];
 
     [self cancelAllDownloads];
+    [_tileSources enumerateObjectsUsingBlock:^(id<RMTileSource> tileSource, NSUInteger idx, BOOL *stop) {
+        tileSource.sourceContainer = nil;
+    }];
     [_tileSources removeAllObjects];
 
      _projection = nil;

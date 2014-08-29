@@ -36,6 +36,7 @@
 }
 
 @synthesize minZoom = _minZoom, maxZoom = _maxZoom, cacheable = _cacheable, opaque = _opaque;
+@synthesize sourceContainer;
 
 - (id)init
 {

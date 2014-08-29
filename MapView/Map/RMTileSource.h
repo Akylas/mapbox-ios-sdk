@@ -34,7 +34,7 @@
 #define RMTileRequested @"RMTileRequested"
 #define RMTileRetrieved @"RMTileRetrieved"
 
-@class RMFractalTileProjection, RMTileCache, RMProjection, RMTileImage, RMTileCache;
+@class RMFractalTileProjection, RMTileCache, RMProjection, RMTileImage, RMTileCache, RMTileSourcesContainer;
 
 @protocol RMMercatorToTileProjection;
 
@@ -88,6 +88,8 @@
 
 /** An extended version of the tile source's attribution string. */
 @property (nonatomic, readonly) NSString *longAttribution;
+
+@property (nonatomic, retain) RMTileSourcesContainer *sourceContainer;
 
 #pragma mark -
 

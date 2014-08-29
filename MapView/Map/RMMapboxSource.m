@@ -37,6 +37,7 @@
 #import "RMPointAnnotation.h"
 #import "RMConfiguration.h"
 
+
 @interface RMMapboxSource ()
 {
     RMMapView *_mapView;
@@ -141,6 +142,8 @@
                            }
                        });            
     }
+    [self.sourceContainer sourceUpdated:self inMapView:_mapView];
+    
 }
 
 - (id)initWithTileJSON:(NSString *)tileJSON enablingDataOnMapView:(RMMapView *)mapView
@@ -152,11 +155,6 @@
     }
     
     return self;
-}
-
-- (id)initWithReferenceURL:(NSURL *)referenceURL
-{
-    return [self initWithReferenceURL:referenceURL enablingDataOnMapView:nil];
 }
 
 -(void)getTileJSON

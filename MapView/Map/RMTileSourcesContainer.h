@@ -31,6 +31,7 @@
 #define kRMTileSourcesContainerMinZoom 0
 #define kRMTileSourcesContainerMaxZoom 255
 
+@class RMMapView;
 @interface RMTileSourcesContainer : NSObject
 
 // These are the minimum and maximum zoom levels across all tile sources.
@@ -68,5 +69,7 @@
 - (void)cancelAllDownloads;
 
 - (void)didReceiveMemoryWarning;
+
+-(void)sourceUpdated:(id<RMTileSource>)tileSource inMapView:(RMMapView*)mapView;
 
 @end
