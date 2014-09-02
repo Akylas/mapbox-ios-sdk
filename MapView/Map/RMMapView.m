@@ -2082,6 +2082,7 @@
                 SMCalloutMaskedBackgroundView* backView = (SMCalloutMaskedBackgroundView*)_currentCallout.backgroundView;
                 if (backView && [backView isKindOfClass:[SMCalloutMaskedBackgroundView class]]) {
                     backView.backgroundColor = anAnnotation.layer.calloutBackgroundColor;
+                    backView.arrowHeight = anAnnotation.layer.calloutArrowHeight;
                     backView.cornerRadius = anAnnotation.layer.calloutCornerRadius;
                 }
                 if (anAnnotation.layer.customCalloutAccessoryView)

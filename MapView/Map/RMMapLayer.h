@@ -109,6 +109,7 @@
 @property (nonatomic, strong) UIColor *calloutBackgroundColor;
 @property (nonatomic, assign) UIEdgeInsets calloutPadding;
 @property (nonatomic, assign) CGFloat calloutCornerRadius;
+@property (nonatomic, assign) CGFloat calloutArrowHeight;
 
 /** Set the screen position of the layer.
 *   @param position The desired screen position.

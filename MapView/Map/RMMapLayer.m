@@ -53,6 +53,7 @@
 @synthesize calloutPadding;
 @synthesize calloutBackgroundColor;
 @synthesize calloutCornerRadius;
+@synthesize calloutArrowHeight;
 
 - (id)init
 {
@@ -63,6 +64,7 @@
     self.calloutOffset = CGPointZero;
     self.calloutPadding = [SMCalloutView calloutDefaultPadding];
     self.calloutCornerRadius = [SMCalloutView calloutDefaultCornerRadius];
+    self.calloutArrowHeight = [SMCalloutView calloutDefaultArrowHeight];
 
 	return self;
 }
