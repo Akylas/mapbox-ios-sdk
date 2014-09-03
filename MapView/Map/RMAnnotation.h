@@ -88,6 +88,11 @@
 
 @property (nonatomic, assign) BOOL isCurrentAnnotation;
 
+
+/** Use that property to define a custom sort order of annotations */
+@property (nonatomic, assign) id sortKey;
+
+
 /** @name Representing an Annotation Visually */
 
 /** An object representing the annotation's visual appearance.

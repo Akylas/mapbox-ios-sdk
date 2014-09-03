@@ -96,6 +96,8 @@
     layer = nil;
     
     self.coordinate   = aCoordinate;
+    
+    self.sortKey = nil;
 
     return self;
 }

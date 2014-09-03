@@ -3276,6 +3276,7 @@
     {
         RMAnnotation *annotation1 = (RMAnnotation *)obj1;
         RMAnnotation *annotation2 = (RMAnnotation *)obj2;
+    
         
         // userlocation above shapes but below others
         //
@@ -3309,6 +3310,14 @@
 
         if ( ! [annotation1.layer isKindOfClass:[RMMarker class]] &&   [annotation2.layer isKindOfClass:[RMMarker class]])
             return NSOrderedAscending;
+        
+        //now both are the same class
+        
+        if (annotation1.sortKey && annotation2.sortKey &&
+            [annotation1.sortKey respondsToSelector:@selector(compare:)] &&
+            [annotation2.sortKey respondsToSelector:@selector(compare:)]) {
+            return [annotation1.sortKey compare:annotation2.sortKey];
+        }
 
         // the rest in increasing y-position
         //
