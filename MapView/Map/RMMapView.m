@@ -243,7 +243,6 @@
 @synthesize quadTree = _quadTree;
 @synthesize clusteringEnabled = _clusteringEnabled;
 @synthesize positionClusterMarkersAtTheGravityCenter = _positionClusterMarkersAtTheGravityCenter;
-@synthesize orderMarkersByYPosition = _orderMarkersByYPosition;
 @synthesize orderClusterMarkersAboveOthers = _orderClusterMarkersAboveOthers;
 @synthesize clusterMarkerSize = _clusterMarkerSize, clusterAreaSize = _clusterAreaSize;
 @synthesize adjustTilesForRetinaDisplay = _adjustTilesForRetinaDisplay;
@@ -303,7 +302,6 @@
     
     _constraintRegionFit = YES;
 
-    _orderMarkersByYPosition = YES;
     _orderClusterMarkersAboveOthers = YES;
     
     _aboutToStartZoomAnimation = _inFakeZoomAnimation = NO;
@@ -3265,9 +3263,6 @@
 
 - (void)correctOrderingOfAllAnnotations
 {
-    if ( ! _orderMarkersByYPosition)
-        return;
-
     // sort annotation layer z-indexes so that they overlap properly
     //
     NSMutableArray *sortedAnnotations = [NSMutableArray arrayWithArray:_visibleAnnotations];
@@ -3318,19 +3313,11 @@
             [annotation2.sortKey respondsToSelector:@selector(compare:)]) {
             return [annotation1.sortKey compare:annotation2.sortKey];
         }
+        
+        NSUInteger index1 = [_annotations indexOfObject:annotation1];
+        NSUInteger index2 = [_annotations indexOfObject:annotation2];
+        return (index1 < index2)?NSOrderedDescending:((index1 > index2)?NSOrderedAscending:NSOrderedSame);
 
-        // the rest in increasing y-position
-        //
-        CGPoint obj1Point = [self convertPoint:annotation1.position fromView:_overlayView];
-        CGPoint obj2Point = [self convertPoint:annotation2.position fromView:_overlayView];
-
-        if (obj1Point.y > obj2Point.y)
-            return NSOrderedDescending;
-
-        if (obj1Point.y < obj2Point.y)
-            return NSOrderedAscending;
-
-        return NSOrderedSame;
     }];
 
     for (CGFloat i = 0; i < [sortedAnnotations count]; i++)
