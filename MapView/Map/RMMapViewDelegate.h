@@ -233,5 +233,6 @@ typedef enum : NSUInteger {
 
 
 - (void)mapView:(RMMapView *)mapView willShowCallout:(SMCalloutView*)callout forAnnotation:(RMAnnotation *)annotation;
+- (void)mapView:(RMMapView *)mapView didHideCallout:(SMCalloutView*)callout forAnnotation:(RMAnnotation *)annotation;
 
 @end

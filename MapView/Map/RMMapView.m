@@ -161,6 +161,7 @@
     BOOL _delegateHasDidFailToLocateUserWithError;
     BOOL _delegateHasDidChangeUserTrackingMode;
     BOOL _delegateHasPrepareAnnotationCallout;
+    BOOL _delegateHasDidHideAnnotationCallout;
 
     UIView *_backgroundView;
     RMMapScrollView *_mapScrollView;
@@ -743,7 +744,7 @@
     _delegateHasDidChangeUserTrackingMode = [_delegate respondsToSelector:@selector(mapView:didChangeUserTrackingMode:animated:)];
     
     _delegateHasPrepareAnnotationCallout = [_delegate respondsToSelector:@selector(mapView:willShowCallout:forAnnotation:)];
-
+    _delegateHasDidHideAnnotationCallout = [_delegate respondsToSelector:@selector(mapView:didHideCallout:forAnnotation:)];
 }
 
 - (void)registerMoveEventByUser:(BOOL)wasUserEvent
@@ -2136,11 +2137,13 @@
         else
             [self correctPositionOfAllAnnotations];
 
-         _currentAnnotation = nil;
-         _currentCallout = nil;
-
         if (_delegateHasDidDeselectAnnotation)
             [_delegate mapView:self didDeselectAnnotation:annotation];
+        if (_delegateHasDidHideAnnotationCallout) {
+            [_delegate mapView:self didHideCallout:_currentCallout forAnnotation:annotation];
+        }
+        _currentAnnotation = nil;
+        _currentCallout = nil;
     }
 }
 
@@ -2153,8 +2156,6 @@
 {
     return _currentAnnotation;
 }
-
-
 
 - (NSTimeInterval)calloutView:(SMCalloutView *)calloutView delayForRepositionWithSize:(CGSize)offset
 {
