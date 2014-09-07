@@ -3089,6 +3089,7 @@
 //    RMLog(@"Change annotation at {%f,%f} with contentOffset {%f,%f}", annotation.position.x, annotation.position.y, _mapScrollView.contentOffset.x,_mapScrollView.contentOffset.y);
 
     [annotation setPosition:newPosition animated:animated];
+    [annotation updateVisibilityForZoom:_zoom];
 }
 
 -(float)animationDuration
@@ -3121,8 +3122,9 @@
     {
         if (!correctAllAnnotations || _mapScrollViewIsZooming)
         {
-            for (RMAnnotation *annotation in _visibleAnnotations)
+            for (RMAnnotation *annotation in _visibleAnnotations) {
                 [self correctScreenPosition:annotation animated:animated];
+            }
 
 //            RMLog(@"%d annotations corrected", [visibleAnnotations count]);
             [self correctOrderingOfAllAnnotations];
@@ -3201,7 +3203,7 @@
                 for (RMAnnotation *annotation in _annotations)
                 {
                     [self correctScreenPosition:annotation animated:animated];
-
+                
                     if ([annotation isAnnotationWithinBounds:[self bounds]])
                     {
                         if (annotation.layer == nil && _delegateHasLayerForAnnotation)
@@ -3372,6 +3374,7 @@
 
         if (annotation.layer)
         {
+            [annotation updateVisibilityForZoom:_zoom];
             [_overlayView addSublayer:annotation.layer];
             [_visibleAnnotations addObject:annotation];
         }

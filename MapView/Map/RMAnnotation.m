@@ -89,9 +89,12 @@
     self.hasBoundingBox    = NO;
     self.enabled           = YES;
     self.clusteringEnabled = YES;
+    self.minZoom           = 0.0f;
+    self.maxZoom           = 22.0f;
     
     self.isCurrentAnnotation      = NO;
     self.isUserLocationAnnotation = NO;
+    
 
     layer = nil;
     
@@ -125,6 +128,14 @@
 
     if (!aMapView)
         self.layer = nil;
+}
+
+-(void)updateVisibilityForZoom:(CGFloat)zoom
+{
+    BOOL newHidden = (zoom < _minZoom  || zoom > _maxZoom);
+    if (newHidden != self.layer.hidden) {
+        [self.layer setHidden:newHidden];
+    }
 }
 
 - (void)setPosition:(CGPoint)aPosition animated:(BOOL)animated

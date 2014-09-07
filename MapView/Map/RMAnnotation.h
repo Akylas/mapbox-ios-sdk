@@ -115,6 +115,9 @@
 
 @property (nonatomic, weak) RMQuadTreeNode *quadTreeNode;
 
+@property (nonatomic, assign) CGFloat minZoom;
+@property (nonatomic, assign) CGFloat maxZoom;
+
 /** @name Filtering Types of Annotations */
 
 /** Whether the annotation is related to display of the user's location. Useful for filtering purposes when providing annotation layers in the delegate. 
@@ -160,6 +163,7 @@
 #pragma mark -
 
 - (void)setPosition:(CGPoint)position animated:(BOOL)animated;
+-(void)updateVisibilityForZoom:(CGFloat)zoom;
 
 #pragma mark -
 
