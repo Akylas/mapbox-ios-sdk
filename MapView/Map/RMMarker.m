@@ -48,7 +48,7 @@
 
 - (CALayer *)hitTest:(CGPoint)point
 {
-    if (self.annotation.isCurrentAnnotation || self.hidden) {
+    if (self.annotation.isCurrentAnnotation || self.opacity == 0) {
         return nil;
     }
     CGRect frame = self.frame;

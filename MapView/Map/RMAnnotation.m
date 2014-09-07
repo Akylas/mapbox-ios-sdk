@@ -133,8 +133,9 @@
 -(void)updateForZoom:(CGFloat)zoom
 {
     BOOL newHidden = (zoom < _minZoom  || zoom > _maxZoom);
-    if (newHidden != self.layer.hidden) {
-        [self.layer setHidden:newHidden];
+    BOOL oldHidden = self.layer.opacity == 1?NO:YES;
+    if (newHidden != oldHidden) {
+        [self.layer setOpacity:newHidden?0:1];
     }
 }
 
