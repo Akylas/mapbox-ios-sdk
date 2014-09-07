@@ -163,7 +163,7 @@
 #pragma mark -
 
 - (void)setPosition:(CGPoint)position animated:(BOOL)animated;
--(void)updateVisibilityForZoom:(CGFloat)zoom;
+-(void)updateForZoom:(CGFloat)zoom;
 
 #pragma mark -
 

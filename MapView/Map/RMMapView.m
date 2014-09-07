@@ -3089,7 +3089,6 @@
 //    RMLog(@"Change annotation at {%f,%f} with contentOffset {%f,%f}", annotation.position.x, annotation.position.y, _mapScrollView.contentOffset.x,_mapScrollView.contentOffset.y);
 
     [annotation setPosition:newPosition animated:animated];
-    [annotation updateVisibilityForZoom:_zoom];
 }
 
 -(float)animationDuration
@@ -3117,6 +3116,9 @@
     _accumulatedDelta.x = 0.0;
     _accumulatedDelta.y = 0.0;
     [_overlayView moveLayersBy:_accumulatedDelta];
+    
+    BOOL zoomChanging = (_zoom != _lastZoom);
+    BOOL updateZoomOutOfTransaction = !animated && _mapScrollViewIsZooming && !_mapScrollView.layer.animationKeys;
 
     if (self.quadTree)
     {
@@ -3124,12 +3126,21 @@
         {
             for (RMAnnotation *annotation in _visibleAnnotations) {
                 [self correctScreenPosition:annotation animated:animated];
+                if (zoomChanging && !updateZoomOutOfTransaction) {
+                    [annotation updateForZoom:_zoom];
+                }
             }
 
 //            RMLog(@"%d annotations corrected", [visibleAnnotations count]);
             [self correctOrderingOfAllAnnotations];
 
             [CATransaction commit];
+            
+            if (zoomChanging && updateZoomOutOfTransaction) {
+                for (RMAnnotation *annotation in _visibleAnnotations) {
+                    [annotation updateForZoom:_zoom];
+                }
+            }
 
             return;
         }
@@ -3163,11 +3174,16 @@
             // Use the zPosition property to order the layer hierarchy
             if ( ! [_visibleAnnotations containsObject:annotation])
             {
+                [annotation updateForZoom:_zoom];
                 [_overlayView addSublayer:annotation.layer];
                 [_visibleAnnotations addObject:annotation];
+            } else if (zoomChanging) {
+                [annotation updateForZoom:_zoom];
             }
 
             [self correctScreenPosition:annotation animated:animated];
+            
+            
 
             [previousVisibleAnnotations removeObject:annotation];
         }
@@ -3374,7 +3390,7 @@
 
         if (annotation.layer)
         {
-            [annotation updateVisibilityForZoom:_zoom];
+            [annotation updateForZoom:_zoom];
             [_overlayView addSublayer:annotation.layer];
             [_visibleAnnotations addObject:annotation];
         }

@@ -130,7 +130,7 @@
         self.layer = nil;
 }
 
--(void)updateVisibilityForZoom:(CGFloat)zoom
+-(void)updateForZoom:(CGFloat)zoom
 {
     BOOL newHidden = (zoom < _minZoom  || zoom > _maxZoom);
     if (newHidden != self.layer.hidden) {
