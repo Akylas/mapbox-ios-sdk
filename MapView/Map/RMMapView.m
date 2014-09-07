@@ -3335,9 +3335,10 @@
             return [annotation1.sortKey compare:annotation2.sortKey];
         }
         
-        NSUInteger index1 = [_annotations indexOfObject:annotation1];
-        NSUInteger index2 = [_annotations indexOfObject:annotation2];
-        return (index1 < index2)?NSOrderedDescending:((index1 > index2)?NSOrderedAscending:NSOrderedSame);
+        return NSOrderedDescending; //returning NSOrderedDescending means index1 < index2
+//        NSUInteger index1 = [_annotations indexOfObject:annotation1];
+//        NSUInteger index2 = [_annotations indexOfObject:annotation2];
+//        return (index1 < index2)?NSOrderedDescending:((index1 > index2)?NSOrderedAscending:NSOrderedSame);
 
     }];
 
