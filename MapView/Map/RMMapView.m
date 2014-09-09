@@ -2322,7 +2322,7 @@
 }
 
 -(void)updateAfterSourceChange {
-    RMProjectedPoint centerPoint = [self centerProjectedPoint];
+//    RMProjectedPoint centerPoint = [self centerProjectedPoint];
     [_tileSourcesContainer cancelAllDownloads];
     _projection = [_tileSourcesContainer projection];
     
@@ -3133,7 +3133,6 @@
                 }
             }
 
-//            RMLog(@"%d annotations corrected", [visibleAnnotations count]);
             [self correctOrderingOfAllAnnotations];
 
             [CATransaction commit];
@@ -3163,7 +3162,6 @@
                                                     andProjectedClusterMarkerSize:RMProjectedSizeMake(self.clusterMarkerSize.width * _metersPerPixel, self.clusterMarkerSize.height * _metersPerPixel)
                                                                 findGravityCenter:self.positionClusterMarkersAtTheGravityCenter];
         NSMutableSet *previousVisibleAnnotations = [[NSMutableSet alloc] initWithArray:_visibleAnnotations];
-
         for (RMAnnotation *annotation in annotationsToCorrect)
         {
             if (annotation.layer == nil && _delegateHasLayerForAnnotation)
