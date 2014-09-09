@@ -172,7 +172,7 @@ typedef enum : NSUInteger {
     backgroundImage:(UIImage *)backgroundImage;
 
 - (void)setFrame:(CGRect)frame;
-- (void)setFrame:(CGRect)frame keepZoom:(BOOL)keepZoom animated:(BOOL)animated;
+- (void)setFrame:(CGRect)frame animated:(BOOL)animated;
 
 + (UIImage *)resourceImageNamed:(NSString *)imageName;
 + (NSString *)pathForBundleResourceNamed:(NSString *)name ofType:(NSString *)extension;
@@ -275,7 +275,6 @@ typedef enum : NSUInteger {
  *   @param southWest The southwest point to zoom to.
  *   @param northEast The northeast point to zoom to. */
 - (void)zoomWithLatitudeLongitudeBoundsSouthWest:(CLLocationCoordinate2D)southWest northEast:(CLLocationCoordinate2D)northEast ;
-- (void)zoomWithLatitudeLongitudeBoundsSouthWest:(CLLocationCoordinate2D)southWest northEast:(CLLocationCoordinate2D)northEast regionFit:(BOOL)regionFit animated:(BOOL)animated;
 
 - (float)nextNativeZoomFactor;
 - (float)previousNativeZoomFactor;
