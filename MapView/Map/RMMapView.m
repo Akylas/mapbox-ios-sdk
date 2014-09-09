@@ -1752,21 +1752,21 @@
     {
         [self correctPositionOfAllAnnotationsIncludingInvisibles:NO animated:_aboutToStartZoomAnimation || (_mapScrollViewIsZooming && !_mapScrollView.zooming)];
 
-        if (_currentAnnotation && ! [_currentAnnotation isKindOfClass:[RMMarker class]])
-        {
-            // adjust shape annotation callouts for frame changes during zoom
-            //
-            _currentCallout.delegate = nil;
-
-            _currentCallout.permittedArrowDirection = SMCalloutArrowDirectionDown;
-
-            [_currentCallout presentCalloutFromRect:_currentAnnotation.layer.bounds
-                                            inLayer:_currentAnnotation.layer
-                                 constrainedToLayer:self.layer
-                                           animated:NO];
-
-            _currentCallout.delegate = self;
-        }
+//        if (_currentAnnotation && ! [_currentAnnotation isKindOfClass:[RMMarker class]])
+//        {
+//            // adjust shape annotation callouts for frame changes during zoom
+//            //
+//            _currentCallout.delegate = nil;
+//
+//            _currentCallout.permittedArrowDirection = SMCalloutArrowDirectionDown;
+//
+//            [_currentCallout presentCalloutFromRect:_currentAnnotation.layer.bounds
+//                                            inLayer:_currentAnnotation.layer
+//                                 constrainedToLayer:self.layer
+//                                           animated:NO];
+//
+//            _currentCallout.delegate = self;
+//        }
 
         _lastZoom = _zoom;
         [self onRegionChange];
