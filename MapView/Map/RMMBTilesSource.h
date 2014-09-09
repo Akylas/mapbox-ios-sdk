@@ -33,7 +33,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import "RMTileSource.h"
+#import "RMAbstractMercatorTileSource.h"
 
 @class FMDatabaseQueue;
 
@@ -43,7 +43,7 @@
 #define kMBTilesDefaultLatLonBoundingBox ((RMSphericalTrapezium){.northEast = {.latitude = 90, .longitude = 180}, .southWest = {.latitude = -90, .longitude = -180}})
 
 /** An RMMBTilesSource provides for a fast, offline-capable set of map tile images served from a local database. [MBTiles](http://mbtiles.org) is an open standard for map tile image transport. */
-@interface RMMBTilesSource : NSObject <RMTileSource>
+@interface RMMBTilesSource : RMAbstractMercatorTileSource
 {
     FMDatabaseQueue *queue;
 }
