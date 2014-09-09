@@ -89,8 +89,9 @@
 
 - (void)setPosition:(CGPoint)position animated:(BOOL)animated
 {
-    if (!isnan(position.x) && !isnan(position.y))
+    if (!isnan(position.x) && !isnan(position.y)) {
         [self setPosition:position];
+    }
 }
 
 - (void)setDragState:(RMMapLayerDragState)dragState
