@@ -3544,6 +3544,8 @@
     if (mode == RMUserTrackingModeFollowWithHeading && ! CLLocationCoordinate2DIsValid(self.userLocation.coordinate))
         mode = RMUserTrackingModeNone;
 
+    
+    if (_userTrackingMode == mode) return;
     _userTrackingMode = mode;
 
     switch (_userTrackingMode)
