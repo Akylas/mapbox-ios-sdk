@@ -427,7 +427,7 @@
 - (void)setFrame:(CGRect)frame animated:(BOOL)animated
 {
     CGRect r = self.frame;
-    RMProjectedRect projection = [self projectedBounds];
+//    RMProjectedRect projection = [self projectedBounds];
     [super setFrame:frame];
     
     
@@ -442,7 +442,9 @@
         _overlayView.frame = bounds;
         float oldZoom = _zoom;
         [self updateConstrainingProjectedBounds];
-        [self setProjectedBounds:projection];
+        
+        // i have to think about this but it doesn't see necessary
+//        [self setProjectedBounds:projection];
         
         [self setCenterProjectedPoint:centerPoint animated:animated];
       
