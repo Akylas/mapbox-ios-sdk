@@ -2782,10 +2782,11 @@
 
 - (float)adjustedZoomForRetinaDisplay
 {
+    float result = [self zoom];
     if (!self.adjustTilesForRetinaDisplay && _screenScale > 1.0)
-        return [self zoom] + 1.0;
+        result += 1.0;
 
-    return [self zoom];
+    return result;
 }
 
 - (RMProjection *)projection
