@@ -126,6 +126,10 @@
 
 #pragma mark -
 
+@interface RMMapView ()
+@property (nonatomic, retain) RMAnnotation *toSelectAfterMove;
+@end
+
 @implementation RMMapView
 {
     BOOL _delegateHasBeforeMapMove;
@@ -194,7 +198,7 @@
 
     RMAnnotation *_accuracyCircleAnnotation;
     RMAnnotation *_trackingHaloAnnotation;
-
+    
     UIImageView *_userHeadingTrackingView;
 
     RMUserTrackingBarButtonItem *_userTrackingBarButtonItem;
@@ -255,6 +259,7 @@
 @synthesize showLogoBug = _showLogoBug;
 @synthesize constraintRegionFit = _constraintRegionFit;
 @synthesize userLocationRequiredZoom = _userLocationRequiredZoom;
+@synthesize toSelectAfterMove;
 
 #pragma mark -
 #pragma mark Initialization
@@ -809,6 +814,10 @@
 
 - (void)completeMoveEventAfterDelay:(NSTimeInterval)delay
 {
+    if (self.toSelectAfterMove) {
+        [self selectAnnotation:self.toSelectAfterMove animated:YES];
+        self.toSelectAfterMove = nil;
+    }
     if ( ! delay)
         [_moveDelegateQueue setSuspended:NO];
     else
@@ -1799,6 +1808,8 @@
         _lastZoom = _zoom;
         [self onRegionChange];
     }
+    
+    CGRect frame = self.frame;
 
     _lastContentOffset = _mapScrollView.contentOffset;
     _lastContentSize = _mapScrollView.contentSize;
@@ -2086,6 +2097,13 @@
 
         _currentAnnotation = anAnnotation;
         _currentAnnotation.isCurrentAnnotation = YES;
+        
+        if (anAnnotation.layer == nil)
+        {
+            self.toSelectAfterMove = anAnnotation;
+            [self setCenterCoordinate:anAnnotation.coordinate animated:YES];
+            return;
+        }
 
         if (anAnnotation.layer.canShowCallout)
         {
