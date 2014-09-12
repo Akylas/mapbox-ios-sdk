@@ -243,8 +243,8 @@ RMProjectedRect RMProjectedRectFromPoints(RMProjectedPoint p1, RMProjectedPoint 
             lastScale = scale;
             // calculate the bounds of the scaled path
             CGRect boundsInMercators = scaledPath.bounds;
-            if (isinf(boundsInMercators.origin.x) || isinf(boundsInMercators.origin.y) ||
-                isnan(boundsInMercators.origin.x) || isnan(boundsInMercators.origin.y) ||
+            if (RMIsInf(boundsInMercators.origin.x) || RMIsInf(boundsInMercators.origin.y) ||
+                RMIsNAN(boundsInMercators.origin.x) || RMIsNAN(boundsInMercators.origin.y) ||
                 CGRectIsInfinite(boundsInMercators)) {
                 boundsInMercators = CGRectZero;
             }
@@ -553,10 +553,24 @@ RMProjectedRect RMProjectedRectFromPoints(RMProjectedPoint p1, RMProjectedPoint 
     {
         // if shape is not filled with a color, do a simple "point on path" test
         //
-        UIGraphicsBeginImageContext(self.bounds.size);
-        CGContextAddPath(UIGraphicsGetCurrentContext(), shapeLayer.path);
-        containsPoint = CGContextPathContainsPoint(UIGraphicsGetCurrentContext(), thePoint, kCGPathStroke);
-        UIGraphicsEndImageContext();
+        if (self.additionalTouchPadding)
+        {
+            CGPathRef tapTargetPath = CGPathCreateCopyByStrokingPath(shapeLayer.path, nil, fmaxf(self.additionalTouchPadding, shapeLayer.lineWidth), 0, 0, 0);
+
+            if (tapTargetPath)
+            {
+                containsPoint = [[UIBezierPath bezierPathWithCGPath:tapTargetPath] containsPoint:thePoint];
+
+                CGPathRelease(tapTargetPath);
+            }
+        }
+        else
+        {
+            UIGraphicsBeginImageContext(self.bounds.size);
+            CGContextAddPath(UIGraphicsGetCurrentContext(), shapeLayer.path);
+            containsPoint = CGContextPathContainsPoint(UIGraphicsGetCurrentContext(), thePoint, kCGPathStroke);
+            UIGraphicsEndImageContext();
+        }
     }
     else
     {

@@ -29,6 +29,7 @@
 #import "RMPixel.h"
 #import "RMAnnotation.h"
 #import "RMMapView.h"
+#import "RMMarker.h"
 #import "SMCalloutView/SMCalloutView.h"
 
 @interface RMMapView (PrivateMethods)
@@ -83,13 +84,20 @@
 
 - (void)setCanShowCallout:(BOOL)canShowCallout
 {
-    if ( ! self.annotation.isClusterAnnotation)
-        _canShowCallout = canShowCallout;
+    if (canShowCallout)
+    {
+        NSAssert([self isKindOfClass:[RMMarker class]],  @"Callouts are not supported on non-marker annotation layers");
+        NSAssert( ! self.annotation.isClusterAnnotation, @"Callouts are not supported on cluster annotation layers");
+    }
+
+    _canShowCallout = canShowCallout;
 }
 
 - (void)setPosition:(CGPoint)position animated:(BOOL)animated
 {
-    if (!isnan(position.x) && !isnan(position.y)) {
+    if ( ! [[NSDecimalNumber notANumber] isEqualToNumber:@(position.x)] &&
+        ! [[NSDecimalNumber notANumber] isEqualToNumber:@(position.y)])
+    {
         [self setPosition:position];
     }
 }

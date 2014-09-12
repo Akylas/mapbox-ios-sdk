@@ -27,6 +27,7 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #import "RMMapScrollView.h"
+#import "RMFoundation.h"
 
 @implementation RMMapScrollView
 
@@ -34,12 +35,15 @@
 
 - (void)setContentOffset:(CGPoint)contentOffset
 {
-    if ( ! isnan(contentOffset.x) && ! isnan(contentOffset.y) && ! isinf(contentOffset.x) && ! isinf(contentOffset.y))
+    
+
+    if (!RMIsNAN(contentOffset.x) &&
+        !RMIsNAN(contentOffset.y) &&
+        !RMIsInf(contentOffset.x) &&
+        !RMIsInf(contentOffset.y))
     {
         if (self.mapScrollViewDelegate)
             [self.mapScrollViewDelegate scrollView:self correctedContentOffset:&contentOffset];
-        CGSize size1 = self.contentSize;
-        CGSize size2 = self.bounds.size;
         [super setContentOffset:contentOffset];
     }
 }
@@ -48,7 +52,10 @@
 {
     
 
-    if ( ! isnan(contentOffset.x) && ! isnan(contentOffset.y) && ! isinf(contentOffset.x) && ! isinf(contentOffset.y))
+    if (!RMIsNAN(contentOffset.x) &&
+        !RMIsNAN(contentOffset.y) &&
+        !RMIsInf(contentOffset.x) &&
+        !RMIsInf(contentOffset.y))
     {
         if (self.mapScrollViewDelegate)
             [self.mapScrollViewDelegate scrollView:self correctedContentOffset:&contentOffset];
@@ -77,7 +84,8 @@
 
 -(void)setBounds:(CGRect)bounds
 {
-    if ( ! isnan(bounds.origin.x) && ! isnan(bounds.origin.y))
+    if ( ! [[NSDecimalNumber notANumber] isEqualToNumber:@(bounds.origin.x)] &&
+        ! [[NSDecimalNumber notANumber] isEqualToNumber:@(bounds.origin.y)])
     {
         [super setBounds:bounds];
     }

@@ -126,4 +126,8 @@ double RMEuclideanDistanceBetweenProjectedPoints(RMProjectedPoint point1, RMProj
 void RMLogProjectedPoint(RMProjectedPoint point);
 void RMLogProjectedRect(RMProjectedRect rect);
 
+
+#define RMIsNAN(n) (fpclassify(n) == FP_NAN)
+#define RMIsInf(n) (fpclassify(n) == FP_INFINITE)
+
 #endif

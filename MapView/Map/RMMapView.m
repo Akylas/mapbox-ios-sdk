@@ -66,9 +66,6 @@
 #define kDefaultMaximumZoomLevel 25.0
 #define kDefaultInitialZoomLevel 11.0
 
-#define kRMTrackingHaloAnnotationTypeName   @"RMTrackingHaloAnnotation"
-#define kRMAccuracyCircleAnnotationTypeName @"RMAccuracyCircleAnnotation"
-
 #pragma mark --- end constants ----
 
 @interface RMMapView (PrivateMethods) <UIScrollViewDelegate,
@@ -131,8 +128,6 @@
 
 @implementation RMMapView
 {
-    id <RMMapViewDelegate> _delegate;
-
     BOOL _delegateHasBeforeMapMove;
     BOOL _delegateHasAfterMapMove;
     BOOL _delegateHasBeforeMapZoom;
@@ -151,6 +146,7 @@
     BOOL _delegateHasShouldDragAnnotation;
     BOOL _delegateHasDidChangeDragState;
     BOOL _delegateHasLayerForAnnotation;
+    BOOL _delegateHasAnnotationSorting;
     BOOL _delegateHasWillHideLayerForAnnotation;
     BOOL _delegateHasDidHideLayerForAnnotation;
     BOOL _delegateHasDidSelectAnnotation;
@@ -172,6 +168,8 @@
     RMProjection *_projection;
     RMFractalTileProjection *_mercatorToTileProjection;
     RMTileSourcesContainer *_tileSourcesContainer;
+
+    NSMutableArray *_earlyTileSources;
 
     NSMutableArray *_annotations;
     NSMutableArray *_visibleAnnotations;
@@ -201,7 +199,7 @@
 
     RMUserTrackingBarButtonItem *_userTrackingBarButtonItem;
 
-    UIViewController *_viewControllerPresentingAttribution;
+    __weak UIViewController *_viewControllerPresentingAttribution;
     UIButton *_attributionButton;
     UIPopoverController *_attributionPopover;
 
@@ -268,11 +266,6 @@
                                minZoomLevel:(float)initialTileSourceMinZoomLevel
                             backgroundImage:(UIImage *)backgroundImage
 {
-    
-    _initialCenterCoordinate = initialCenterCoordinate;
-    _initialTileSourceZoomLevel = initialTileSourceZoomLevel;
-    _initialTileSourceMaxZoomLevel = initialTileSourceMaxZoomLevel;
-    _initialTileSourceMinZoomLevel = initialTileSourceMinZoomLevel;
     _constrainMovement = _constrainMovementByUser = _bouncingEnabled = _zoomingInPivotsAroundCenter = NO;
     _draggingEnabled = YES;
     _forceUpdate = NO;
@@ -332,11 +325,43 @@
     {
         [self setBackgroundView:nil];
     }
-    
-    if (newTilesource) {
-        [self setTileSource:newTilesource];
-        [self setCenterCoordinate:initialCenterCoordinate animated:NO];
+
+    if ([_earlyTileSources count])
+    {
+        for (id<RMTileSource>earlyTileSource in _earlyTileSources)
+        {
+            if (initialTileSourceMinZoomLevel < earlyTileSource.minZoom) initialTileSourceMinZoomLevel = earlyTileSource.minZoom;
+            if (initialTileSourceMaxZoomLevel > earlyTileSource.maxZoom) initialTileSourceMaxZoomLevel = earlyTileSource.maxZoom;
+        }
     }
+    else
+    {
+        if (initialTileSourceMinZoomLevel < newTilesource.minZoom) initialTileSourceMinZoomLevel = newTilesource.minZoom;
+        if (initialTileSourceMaxZoomLevel > newTilesource.maxZoom) initialTileSourceMaxZoomLevel = newTilesource.maxZoom;
+    }
+    //[self setTileSourcesMinZoom:initialTileSourceMinZoomLevel];
+    //[self setTileSourcesMaxZoom:initialTileSourceMaxZoomLevel];
+    //[self setTileSourcesZoom:initialTileSourceZoomLevel];
+    
+    _initialCenterCoordinate = initialCenterCoordinate;
+    _initialTileSourceZoomLevel = initialTileSourceZoomLevel;
+    _initialTileSourceMaxZoomLevel = initialTileSourceMaxZoomLevel;
+    _initialTileSourceMinZoomLevel = initialTileSourceMinZoomLevel;
+
+    if ([_earlyTileSources count])
+    {
+        [self setTileSources:_earlyTileSources];
+        [_earlyTileSources removeAllObjects];
+        [self setCenterCoordinate: _initialCenterCoordinate animated:NO];
+    }
+    else
+    {
+        [self setTileSource:newTilesource];
+        [self setCenterCoordinate: _initialCenterCoordinate animated:NO];
+    }
+	
+	
+
     [self setDecelerationMode:RMMapDecelerationFast];
 
 //    self.showLogoBug = YES;
@@ -409,6 +434,7 @@
     backgroundImage:(UIImage *)backgroundImage
 {
     if (self = [super initWithFrame:frame]) {
+    	_earlyTileSources = [NSMutableArray array];
         [self performInitializationWithTilesource:newTilesource
                                  centerCoordinate:initialCenterCoordinate
                                         zoomLevel:initialZoomLevel
@@ -416,6 +442,16 @@
                                      minZoomLevel:minZoomLevel
                                   backgroundImage:backgroundImage];
     }
+    return self;
+}
+
+- (id)initWithCoder:(NSCoder *)decoder
+{
+    if (![super initWithCoder:decoder])
+        return nil;
+
+    _earlyTileSources = [NSMutableArray array];
+
     return self;
 }
 
@@ -561,20 +597,17 @@
         if ( ! [[viewController.view valueForKeyPath:@"constraints.firstItem"]  containsObject:container] &&
              ! [[viewController.view valueForKeyPath:@"constraints.secondItem"] containsObject:container])
         {
-            CGFloat topSpacing   = container.frame.origin.y;
-            CGFloat rightSpacing = container.superview.bounds.size.width - container.frame.origin.x;
-
             [viewController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[topLayoutGuide]-topSpacing-[container]"
                                                                                         options:0
-                                                                                        metrics:@{ @"topSpacing" : @(topSpacing) }
+                                                                                        metrics:@{ @"topSpacing"     : @(5) }
                                                                                           views:@{ @"topLayoutGuide" : viewController.topLayoutGuide,
                                                                                                    @"container"      : container }]];
 
 
             [viewController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:[container]-rightSpacing-|"
                                                                                         options:0
-                                                                                        metrics:@{ @"rightSpacing" : @(rightSpacing) }
-                                                                                          views:@{ @"container" : container }]];
+                                                                                        metrics:@{ @"rightSpacing" : @(5) }
+                                                                                          views:@{ @"container"    : container }]];
         }
     }
 
@@ -583,9 +616,6 @@
         if ( ! [[viewController.view valueForKeyPath:@"constraints.firstItem"]  containsObject:_logoBug] &&
              ! [[viewController.view valueForKeyPath:@"constraints.secondItem"] containsObject:_logoBug])
         {
-            CGFloat leftSpacing   = _logoBug.frame.origin.x;
-            CGFloat bottomSpacing = _logoBug.superview.bounds.size.height - _logoBug.frame.origin.y - _logoBug.bounds.size.height;
-
             NSString *formatString;
             NSDictionary *views;
 
@@ -603,12 +633,12 @@
 
             [viewController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:formatString
                                                                                         options:0
-                                                                                        metrics:@{ @"bottomSpacing" : @(bottomSpacing) }
+                                                                                        metrics:@{ @"bottomSpacing" : @(4) }
                                                                                           views:views]];
 
             [viewController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-leftSpacing-[logoBug]"
                                                                                         options:0
-                                                                                        metrics:@{ @"leftSpacing" : @(leftSpacing) }
+                                                                                        metrics:@{ @"leftSpacing" : @(8) }
                                                                                           views:views]];
         }
     }
@@ -618,9 +648,6 @@
         if ( ! [[viewController.view valueForKeyPath:@"constraints.firstItem"]  containsObject:_attributionButton] &&
              ! [[viewController.view valueForKeyPath:@"constraints.secondItem"] containsObject:_attributionButton])
         {
-            CGFloat rightSpacing  = _attributionButton.superview.bounds.size.width - _attributionButton.frame.origin.x - _attributionButton.bounds.size.width;
-            CGFloat bottomSpacing = _attributionButton.superview.bounds.size.height - _attributionButton.frame.origin.y - _attributionButton.bounds.size.height;
-
             NSString *formatString;
             NSDictionary *views;
 
@@ -638,12 +665,12 @@
 
             [viewController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:formatString
                                                                                         options:0
-                                                                                        metrics:@{ @"bottomSpacing" : @(bottomSpacing) }
+                                                                                        metrics:@{ @"bottomSpacing" : @(8) }
                                                                                           views:views]];
 
             [viewController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:[attributionButton]-rightSpacing-|"
                                                                                         options:0
-                                                                                        metrics:@{ @"rightSpacing" : @(rightSpacing) }
+                                                                                        metrics:@{ @"rightSpacing" : @(8) }
                                                                                           views:views]];
         }
     }
@@ -697,11 +724,6 @@
 #pragma mark -
 #pragma mark Delegate
 
-- (id <RMMapViewDelegate>)delegate
-{
-	return _delegate;
-}
-
 - (void)setDelegate:(id <RMMapViewDelegate>)aDelegate
 {
     if (_delegate == aDelegate)
@@ -733,6 +755,7 @@
     _delegateHasDidChangeDragState = [_delegate respondsToSelector:@selector(mapView:annotation:didChangeDragState:fromOldState:)];
 
     _delegateHasLayerForAnnotation = [_delegate respondsToSelector:@selector(mapView:layerForAnnotation:)];
+    _delegateHasAnnotationSorting = [_delegate respondsToSelector:@selector(annotationSortingComparatorForMapView:)];
     _delegateHasWillHideLayerForAnnotation = [_delegate respondsToSelector:@selector(mapView:willHideLayerForAnnotation:)];
     _delegateHasDidHideLayerForAnnotation = [_delegate respondsToSelector:@selector(mapView:didHideLayerForAnnotation:)];
 
@@ -755,12 +778,16 @@
     {
         BOOL flag = wasUserEvent;
 
+        __weak RMMapView *weakSelf = self;
+        BOOL hasBeforeMapMove = _delegateHasBeforeMapMove;
+        BOOL hasAfterMapMove  = _delegateHasAfterMapMove;
+
         if ([_moveDelegateQueue operationCount] == 0)
         {
             dispatch_async(dispatch_get_main_queue(), ^(void)
             {
-                if (_delegateHasBeforeMapMove)
-                    [_delegate beforeMapMove:self byUser:flag];
+                if (hasBeforeMapMove)
+                    [_delegate beforeMapMove:weakSelf byUser:flag];
             });
         }
 
@@ -772,8 +799,8 @@
             {
                 dispatch_async(dispatch_get_main_queue(), ^(void)
                 {
-                    if (_delegateHasAfterMapMove)
-                        [_delegate afterMapMove:self byUser:flag];
+                    if (hasAfterMapMove)
+                        [_delegate afterMapMove:weakSelf byUser:flag];
                 });
             }];
         }
@@ -794,12 +821,16 @@
     {
         BOOL flag = wasUserEvent;
 
+        __weak RMMapView *weakSelf = self;
+        BOOL hasBeforeMapZoom = _delegateHasBeforeMapZoom;
+        BOOL hasAfterMapZoom  = _delegateHasAfterMapZoom;
+
         if ([_zoomDelegateQueue operationCount] == 0)
         {
             dispatch_async(dispatch_get_main_queue(), ^(void)
             {
-                if (_delegateHasBeforeMapZoom)
-                    [_delegate beforeMapZoom:self byUser:flag];
+                if (hasBeforeMapZoom)
+                    [_delegate beforeMapZoom:weakSelf byUser:flag];
             });
         }
 
@@ -811,8 +842,8 @@
             {
                 dispatch_async(dispatch_get_main_queue(), ^(void)
                 {
-                    if (_delegateHasAfterMapZoom)
-                        [_delegate afterMapZoom:self byUser:flag];
+                    if (hasAfterMapZoom)
+                        [_delegate afterMapZoom:weakSelf byUser:flag];
                 });
             }];
         }
@@ -1184,17 +1215,27 @@
 
 - (void)setZoom:(float)newZoom atCoordinate:(CLLocationCoordinate2D)newCenter animated:(BOOL)animated
 {
-    [UIView animateWithDuration:(animated ? 0.3 : 0.0)
-                          delay:0.0
-                        options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationCurveEaseInOut
-                     animations:^(void)
-                     {
-                         [self setZoom:newZoom];
-                         [self setCenterCoordinate:newCenter animated:NO];
+    if (animated)
+    {
+        [UIView animateWithDuration:0.3
+                              delay:0.0
+                            options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationCurveEaseInOut
+                         animations:^(void)
+                         {
+                             [self setZoom:newZoom];
+                             [self setCenterCoordinate:newCenter animated:NO];
 
-                         self.userTrackingMode = RMUserTrackingModeNone;
-                     }
-                     completion:nil];
+                             self.userTrackingMode = RMUserTrackingModeNone;
+                         }
+                         completion:nil];
+    }
+    else
+    {
+        [self setZoom:newZoom];
+        [self setCenterCoordinate:newCenter animated:NO];
+
+        self.userTrackingMode = RMUserTrackingModeNone;
+    }
 }
 
 - (void)zoomByFactor:(float)zoomFactor near:(CGPoint)pivot animated:(BOOL)animated
@@ -1717,6 +1758,9 @@
     _metersPerPixel = planetBounds.size.width / _mapScrollView.contentSize.width;
 
     _zoom = log2f(_mapScrollView.zoomScale);
+    if (RMIsNAN(_zoom)) {
+        _zoom = _lastZoom;
+    }
     _zoom = (_zoom > _maxZoom) ? _maxZoom : _zoom;
     _zoom = (_zoom < _minZoom) ? _minZoom : _zoom;
 
@@ -1751,22 +1795,6 @@
     else
     {
         [self correctPositionOfAllAnnotationsIncludingInvisibles:NO animated:_aboutToStartZoomAnimation || (_mapScrollViewIsZooming && !_mapScrollView.zooming)];
-
-//        if (_currentAnnotation && ! [_currentAnnotation isKindOfClass:[RMMarker class]])
-//        {
-//            // adjust shape annotation callouts for frame changes during zoom
-//            //
-//            _currentCallout.delegate = nil;
-//
-//            _currentCallout.permittedArrowDirection = SMCalloutArrowDirectionDown;
-//
-//            [_currentCallout presentCalloutFromRect:_currentAnnotation.layer.bounds
-//                                            inLayer:_currentAnnotation.layer
-//                                 constrainedToLayer:self.layer
-//                                           animated:NO];
-//
-//            _currentCallout.delegate = self;
-//        }
 
         _lastZoom = _zoom;
         [self onRegionChange];
@@ -1991,19 +2019,17 @@
             _draggedAnnotation = nil;
         }
     }
-    else if(recognizer.state == UIGestureRecognizerStateBegan) {
-        if ([hit isKindOfClass:[RMMapLayer class]] && _delegateHasLongPressOnAnnotation)
-        {
-            // pass annotation long-press to delegate
-            //
-            [_delegate longPressOnAnnotation:[((RMMapLayer *)hit) annotation] onMap:self recognizer:recognizer];
-        }
-        else if (_delegateHasLongPressOnMap)
-        {
-            // pass map long-press to delegate
-            //
-            [_delegate longPressOnMap:self recognizer:recognizer];
-        }
+    else if (recognizer.state == UIGestureRecognizerStateBegan && [hit isKindOfClass:[RMMapLayer class]] && _delegateHasLongPressOnAnnotation)
+    {
+        // pass annotation long-press to delegate
+        //
+        [_delegate longPressOnAnnotation:[((RMMapLayer *)hit) annotation] onMap:self recognizer:recognizer];
+    }
+    else if (recognizer.state == UIGestureRecognizerStateBegan && _delegateHasLongPressOnMap)
+    {
+        // pass map long-press to delegate
+        //
+        [_delegate longPressOnMap:self recognizer:recognizer];
     }
 }
 
@@ -2077,7 +2103,6 @@
                 _currentCallout.calloutOffset = anAnnotation.layer.calloutOffset;
                 _currentCallout.leftAccessoryView = nil;
                 _currentCallout.rightAccessoryView = nil;
-                _currentCallout.contentView = nil;
                 _currentCallout.contentView = nil;
                 _currentCallout.padding = anAnnotation.layer.calloutPadding;
                 SMCalloutMaskedBackgroundView* backView = (SMCalloutMaskedBackgroundView*)_currentCallout.backgroundView;
@@ -2307,6 +2332,16 @@
 
 - (void)setTileSources:(NSArray *)tileSources
 {
+    if ( ! _tileSourcesContainer)
+    {
+        // If we've reached this point, it's because our scroll view etc.
+        // aren't yet setup. So let's remember the tile source(s) set so that
+        // we can apply them later on once we're properly initialized.
+        //
+        [_earlyTileSources setArray:tileSources];
+        return;
+    }
+
     if ( ! [_tileSourcesContainer setTileSources:tileSources])
         return;
 
@@ -2354,6 +2389,16 @@
 
 - (void)addTileSource:(id<RMTileSource>)newTileSource atIndex:(NSUInteger)index
 {
+    if ( ! _tileSourcesContainer)
+    {
+        // If we've reached this point, it's because our scroll view etc.
+        // aren't yet setup. So let's remember the tile source(s) set so that
+        // we can apply them later on once we're properly initialized.
+        //
+        [_earlyTileSources insertObject:newTileSource atIndex:(index > [_earlyTileSources count] ? 0 : index)];
+        return;
+    }
+
     if ([_tileSourcesContainer.tileSources containsObject:newTileSource])
         return;
 
@@ -2686,6 +2731,7 @@
 // if #zoom is outside of range #minZoom to #maxZoom, zoom level is clamped to that range.
 - (void)setZoom:(float)newZoom
 {
+    if (RMIsNAN(newZoom)) return;
     newZoom = (newZoom > _maxZoom) ? _maxZoom : newZoom;
     newZoom = (newZoom < _minZoom) ? _minZoom : newZoom;
     if (!_forceUpdate && _zoom == newZoom)
@@ -3174,7 +3220,6 @@
             if ([annotation.layer isKindOfClass:[RMMarker class]])
                 annotation.layer.transform = _annotationTransform;
 
-            // Use the zPosition property to order the layer hierarchy
             if ( ! [_visibleAnnotations containsObject:annotation])
             {
                 [annotation updateForZoom:_zoom];
@@ -3285,17 +3330,23 @@
 
 - (void)correctOrderingOfAllAnnotations
 {
-    // sort annotation layer z-indexes so that they overlap properly
-    //
     NSMutableArray *sortedAnnotations = [NSMutableArray arrayWithArray:_visibleAnnotations];
 
-    [sortedAnnotations sortUsingComparator:^(id obj1, id obj2)
+    NSComparator comparator;
+
+    if (_delegateHasAnnotationSorting && (comparator = [_delegate annotationSortingComparatorForMapView:self]))
     {
-        RMAnnotation *annotation1 = (RMAnnotation *)obj1;
-        RMAnnotation *annotation2 = (RMAnnotation *)obj2;
-    
-        
-        // userlocation above shapes but below others
+        // Sort using the custom comparator.
+        //
+        [sortedAnnotations sortUsingComparator:comparator];
+    }
+    else
+    {
+        // Sort using the default comparator.
+        //
+        [sortedAnnotations sortUsingComparator:^(RMAnnotation *annotation1, RMAnnotation *annotation2)
+        {
+             // userlocation above shapes but below others
         //
         if (annotation1.isUserLocationAnnotation)
         {
@@ -3340,13 +3391,15 @@
 //        NSUInteger index1 = [_annotations indexOfObject:annotation1];
 //        NSUInteger index2 = [_annotations indexOfObject:annotation2];
 //        return (index1 < index2)?NSOrderedDescending:((index1 > index2)?NSOrderedAscending:NSOrderedSame);
+        }];
+    }
 
-    }];
-
+    // Apply layering values based on sort order.
+    //
     for (CGFloat i = 0; i < [sortedAnnotations count]; i++)
         ((RMAnnotation *)[sortedAnnotations objectAtIndex:i]).layer.zPosition = (CGFloat)i;
 
-    // bring any active callout annotation to the front
+    // Bring any active callout annotation to the front.
     //
     if (_currentAnnotation) {
         CGFloat zPosition = MAXFLOAT;
@@ -3478,6 +3531,17 @@
         self.userLocation = [RMUserLocation annotationWithMapView:self coordinate:CLLocationCoordinate2DMake(MAXFLOAT, MAXFLOAT) andTitle:nil];
 
         _locationManager = [CLLocationManager new];
+
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
+        // enable iOS 8+ location authorization API
+        //
+        if ([CLLocationManager instancesRespondToSelector:@selector(requestWhenInUseAuthorization)])
+        {
+            NSAssert([[[NSBundle mainBundle] infoDictionary] valueForKey:@"NSLocationWhenInUseUsageDescription"], @"For iOS 8 and above, your app must have a value for NSLocationWhenInUseUsageDescription in its Info.plist");
+            [_locationManager requestWhenInUseAuthorization];
+        }
+#endif
+
         _locationManager.headingFilter = 5.0;
         _locationManager.delegate = self;
         [_locationManager startUpdatingLocation];
@@ -3687,7 +3751,12 @@
         self.userLocation.location = newLocation;
         
         if (_delegateHasDidUpdateUserLocation)
+        {
             [_delegate mapView:self didUpdateUserLocation:self.userLocation];
+
+            if ( ! _showsUserLocation)
+                return;
+        }
     }
     
     
@@ -3745,7 +3814,6 @@
         _accuracyCircleAnnotation.clusteringEnabled = NO;
         _accuracyCircleAnnotation.enabled = NO;
         _accuracyCircleAnnotation.layer = [[RMCircle alloc] initWithView:self radiusInMeters:newLocation.horizontalAccuracy];
-        _accuracyCircleAnnotation.layer.zPosition = -MAXFLOAT;
         _accuracyCircleAnnotation.isUserLocationAnnotation = YES;
         
         ((RMCircle *)_accuracyCircleAnnotation.layer).lineColor = (RMPreVersion7 ? [UIColor colorWithRed:0.378 green:0.552 blue:0.827 alpha:0.7] : [UIColor clearColor]);
@@ -3796,7 +3864,6 @@
         // create image marker
         //
         _trackingHaloAnnotation.layer = [[RMMarker alloc] initWithUIImage:[self trackingDotHaloImage]];
-        _trackingHaloAnnotation.layer.zPosition = -MAXFLOAT + 1;
         _trackingHaloAnnotation.isUserLocationAnnotation = YES;
         
         [CATransaction begin];
@@ -3873,9 +3940,16 @@
     self.userLocation.heading = newHeading;
 
     if (_delegateHasDidUpdateUserLocation)
+    {
         [_delegate mapView:self didUpdateUserLocation:self.userLocation];
 
-    if (newHeading.trueHeading != 0 && self.userTrackingMode == RMUserTrackingModeFollowWithHeading)
+        if ( ! _showsUserLocation)
+            return;
+    }
+
+    CLLocationDirection headingDirection = (newHeading.trueHeading > 0 ? newHeading.trueHeading : newHeading.magneticHeading);
+
+    if (headingDirection != 0 && self.userTrackingMode == RMUserTrackingModeFollowWithHeading)
     {
         if (_userHeadingTrackingView.alpha < 1.0)
             [UIView animateWithDuration:0.5 animations:^(void) { _userHeadingTrackingView.alpha = 1.0; }];
@@ -3889,7 +3963,7 @@
                             options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationCurveEaseInOut
                          animations:^(void)
                          {
-                             CGFloat angle = (M_PI / -180) * newHeading.trueHeading;
+                             CGFloat angle = (M_PI / -180) * headingDirection;
 
                              _mapTransform = CGAffineTransformMakeRotation(angle);
                              _annotationTransform = CATransform3DMakeAffineTransform(CGAffineTransformMakeRotation(-angle));
@@ -4057,8 +4131,8 @@
         _attributionButton.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin;
         _attributionButton.translatesAutoresizingMaskIntoConstraints = NO;
         [_attributionButton addTarget:self action:@selector(showAttribution:) forControlEvents:UIControlEventTouchUpInside];
-        _attributionButton.frame = CGRectMake(self.bounds.size.width  - 30,
-                                              self.bounds.size.height - 30,
+        _attributionButton.frame = CGRectMake(self.bounds.size.width - _attributionButton.bounds.size.width - 8,
+                                              self.bounds.size.height - _attributionButton.bounds.size.height - 8,
                                               _attributionButton.bounds.size.width,
                                               _attributionButton.bounds.size.height);
         [self addSubview:_attributionButton];

@@ -144,7 +144,7 @@
     position = aPosition;
     if (layer &&
         //         !isnan(aPosition.x) && !isnan(aPosition.y) && //already checked in RMMapLayer
-        !isinf(aPosition.x) && !isinf(aPosition.y)) {
+        !RMIsInf(aPosition.x) && !RMIsInf(aPosition.y)) {
         [layer setPosition:aPosition animated:animated];
     }
 }
@@ -152,6 +152,11 @@
 - (void)setPosition:(CGPoint)aPosition
 {
     [self setPosition:aPosition animated:YES];
+}
+
+- (CGPoint)absolutePosition
+{
+    return [self.mapView.layer convertPoint:self.position fromLayer:self.layer.superlayer];
 }
 
 - (RMMapLayer *)layer

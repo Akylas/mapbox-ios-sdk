@@ -94,6 +94,7 @@ static RMConfiguration *RMConfigurationSharedInstance = nil;
 }
 
 @synthesize userAgent=_userAgent;
+@synthesize accessToken=_accessToken;
 
 + (instancetype)configuration
 {

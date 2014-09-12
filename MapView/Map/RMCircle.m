@@ -198,7 +198,7 @@
 
 - (void)setPosition:(CGPoint)position animated:(BOOL)animated
 {
-    if (!isnan(position.x) && !isnan(position.y))
+    if (!RMIsNAN(position.x) && !RMIsNAN(position.y))
         [self setPosition:position];
 
     [self updateCirclePathAnimated:animated];
