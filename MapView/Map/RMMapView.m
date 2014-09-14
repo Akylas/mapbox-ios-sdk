@@ -1760,7 +1760,7 @@
 
 //    RMLog(@"contentOffset: {%.0f,%.0f} -> {%.1f,%.1f} (%.0f,%.0f)", oldContentOffset.x, oldContentOffset.y, newContentOffset.x, newContentOffset.y, newContentOffset.x - oldContentOffset.x, newContentOffset.y - oldContentOffset.y);
 //    RMLog(@"contentSize: {%.0f,%.0f} -> {%.0f,%.0f}", _lastContentSize.width, _lastContentSize.height, _mapScrollView.contentSize.width, _mapScrollView.contentSize.height);
-//    RMLog(@"isZooming: %d, scrollview.zooming: %d", _mapScrollViewIsZooming, mapScrollView.zooming);
+//    RMLog(@"isZooming: %d, scrollview.zooming: %d", _mapScrollViewIsZooming, _mapScrollView.zooming);
 
     RMProjectedRect planetBounds = _projection.planetBounds;
     _metersPerPixel = planetBounds.size.width / _mapScrollView.contentSize.width;
