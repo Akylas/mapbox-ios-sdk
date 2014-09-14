@@ -1750,8 +1750,7 @@
     // The first offset during zooming out (animated) is always garbage
     if ( (_inFakeZoomAnimation || _mapScrollViewIsZooming) &&
         _mapScrollView.zooming == NO &&
-        (_lastContentSize.width > _mapScrollView.contentSize.width &&
-        (newContentOffset.y - oldContentOffset.y) == 0.0))
+        (_lastContentSize.width > _mapScrollView.contentSize.width))
     {
         _lastContentOffset = _mapScrollView.contentOffset;
         _lastContentSize = _mapScrollView.contentSize;
