@@ -3201,13 +3201,13 @@
 
             [CATransaction commit];
             
-            [CATransaction begin];
             if (zoomChanging && updateZoomOutOfTransaction) {
+                [CATransaction begin];
                 for (RMAnnotation *annotation in _visibleAnnotations) {
                     [annotation updateForZoom:_zoom];
                 }
+                [CATransaction commit];
             }
-            [CATransaction commit];
 
             return;
         }
