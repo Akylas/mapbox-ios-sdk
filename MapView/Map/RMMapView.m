@@ -1746,24 +1746,33 @@
 
     if (CGPointEqualToPoint(oldContentOffset, newContentOffset))
         return;
-
+    
+    
+    CGSize newContentSize = _mapScrollView.contentSize;
+    CGSize boundsSize = self.bounds.size;
     // The first offset during zooming out (animated) is always garbage
+    // it happens when offset.y doesn't change or when the contentSize become
+    // smaller than the view size (zooming out to world view)
     if ( (_inFakeZoomAnimation || _mapScrollViewIsZooming) &&
         _mapScrollView.zooming == NO &&
-        (_lastContentSize.width > _mapScrollView.contentSize.width))
+        _lastContentSize.width > newContentSize.width &&
+        ((newContentOffset.y - _lastContentOffset.y) == 0.0 ||
+         newContentSize.width <= boundsSize.width ||
+         newContentSize.height <= boundsSize.height))
     {
         _lastContentOffset = _mapScrollView.contentOffset;
-        _lastContentSize = _mapScrollView.contentSize;
-
+        _lastContentSize = newContentSize;
         return;
     }
-
+    
 //    RMLog(@"contentOffset: {%.0f,%.0f} -> {%.1f,%.1f} (%.0f,%.0f)", oldContentOffset.x, oldContentOffset.y, newContentOffset.x, newContentOffset.y, newContentOffset.x - oldContentOffset.x, newContentOffset.y - oldContentOffset.y);
 //    RMLog(@"contentSize: {%.0f,%.0f} -> {%.0f,%.0f}", _lastContentSize.width, _lastContentSize.height, _mapScrollView.contentSize.width, _mapScrollView.contentSize.height);
 //    RMLog(@"isZooming: %d, scrollview.zooming: %d", _mapScrollViewIsZooming, _mapScrollView.zooming);
+//    RMLog(@"bounds: %@, s", NSStringFromCGRect(self.bounds));
+
 
     RMProjectedRect planetBounds = _projection.planetBounds;
-    _metersPerPixel = planetBounds.size.width / _mapScrollView.contentSize.width;
+    _metersPerPixel = planetBounds.size.width / newContentSize.width;
 
     _zoom = log2f(_mapScrollView.zoomScale);
     if (RMIsNAN(_zoom)) {
@@ -1776,7 +1785,7 @@
 
     if (_zoom == _lastZoom)
     {
-        CGPoint contentOffset = _mapScrollView.contentOffset;
+        CGPoint contentOffset = newContentOffset;
         CGPoint delta = CGPointMake(_lastContentOffset.x - contentOffset.x, _lastContentOffset.y - contentOffset.y);
         _accumulatedDelta.x += delta.x;
         _accumulatedDelta.y += delta.y;
@@ -1810,8 +1819,8 @@
     
     CGRect frame = self.frame;
 
-    _lastContentOffset = _mapScrollView.contentOffset;
-    _lastContentSize = _mapScrollView.contentSize;
+    _lastContentOffset = newContentOffset;
+    _lastContentSize = newContentSize;
 
     
 }
