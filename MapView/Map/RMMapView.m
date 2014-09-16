@@ -3530,7 +3530,7 @@
 
 - (void)removeAllAnnotations
 {
-    [self removeAnnotations:_annotations];
+    [self removeAnnotations:[_annotations copy]];
 }
 
 - (CGPoint)mapPositionForAnnotation:(RMAnnotation *)annotation
