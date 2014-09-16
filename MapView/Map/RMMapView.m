@@ -2733,8 +2733,8 @@
 {
     tileSourcesMaxZoom = floorf(tileSourcesMaxZoom);
 
-    if ( ! self.adjustTilesForRetinaDisplay && _screenScale > 1.0)
-        tileSourcesMaxZoom -= 1.0;
+//    if ( ! self.adjustTilesForRetinaDisplay && _screenScale > 1.0)
+//        tileSourcesMaxZoom -= 1.0;
 
     [self setMaxZoom:tileSourcesMaxZoom];
 }
