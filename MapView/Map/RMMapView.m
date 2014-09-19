@@ -224,6 +224,7 @@
     
     float _animationZoomFactor;
     
+    BOOL _ignoreAnimatedFirstContentSizeChange;
     BOOL _aboutToStartZoomAnimation;
     BOOL _inFakeZoomAnimation;
     CLLocationCoordinate2D _initialCenterCoordinate;
@@ -304,6 +305,7 @@
     _orderClusterMarkersAboveOthers = YES;
     
     _aboutToStartZoomAnimation = _inFakeZoomAnimation = NO;
+    _ignoreAnimatedFirstContentSizeChange = NO;
 
     _annotations = [NSMutableArray new];
     _visibleAnnotations = [NSMutableArray new];
@@ -1174,10 +1176,16 @@
     }
 }
 
+
 - (void)zoomToRect:(CGRect)rect duration:(NSTimeInterval)duration
 {
     _inFakeZoomAnimation = YES;
     _mapScrollViewIsZooming = YES;
+    // in some cases we will get a garbage change of ContentSize
+    // this is where we try to "discover" it
+    _ignoreAnimatedFirstContentSizeChange = _aboutToStartZoomAnimation && _animationZoomFactor < 1 && duration > 0
+        && _lastContentOffset.y != 0 && _lastContentOffset.x != 0
+        && _lastContentOffset.x != (_lastContentSize.width - _mapScrollView.bounds.size.width);
     [UIView animateWithDuration:duration delay:0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
         [_mapScrollView zoomToRect:rect animated:NO];
     } completion:^(BOOL finished) {
@@ -1276,16 +1284,23 @@
 
     if ([self shouldZoomToTargetZoom:targetZoom withZoomFactor:zoomFactor])
     {
+        CGSize currentSize =  _mapScrollView.bounds.size;
         float zoomScale = _mapScrollView.zoomScale;
-        CGSize newZoomSize = CGSizeMake(_mapScrollView.bounds.size.width / zoomFactor,
-                                        _mapScrollView.bounds.size.height / zoomFactor);
-        CGFloat factorX = pivot.x / _mapScrollView.bounds.size.width,
-                factorY = pivot.y / _mapScrollView.bounds.size.height;
+        CGSize newZoomSize = CGSizeMake(currentSize.width / zoomFactor,
+                                        currentSize.height / zoomFactor);
+        CGFloat factorX = pivot.x / currentSize.width,
+                factorY = pivot.y / currentSize.height;
         CGRect zoomRect = CGRectMake(((_mapScrollView.contentOffset.x + pivot.x) - (newZoomSize.width * factorX)) / zoomScale,
                                      ((_mapScrollView.contentOffset.y + pivot.y) - (newZoomSize.height * factorY)) / zoomScale,
                                      newZoomSize.width / zoomScale,
                                      newZoomSize.height / zoomScale);
         _animationZoomFactor = zoomFactor;
+        
+        // in some cases we will get a garbage change of ContentSize
+        // this is where we try to "discover" it
+        _ignoreAnimatedFirstContentSizeChange = animated && _animationZoomFactor < 1
+            && _lastContentOffset.y != 0 && _lastContentOffset.x != 0
+            && _lastContentOffset.x != (_lastContentSize.width - currentSize.width);
         [_mapScrollView zoomToRect:zoomRect animated:animated];
     }
     else
@@ -1631,9 +1646,9 @@
     // slight jiggle fixes problems with UIScrollView
     // briefly allowing zoom beyond min
     //
+    _mapScrollViewIsZooming = scrollView.isZooming;
     [self moveBy:CGSizeMake(-1, -1)];
     [self moveBy:CGSizeMake( 1,  1)];
-    _mapScrollViewIsZooming = scrollView.isZooming;
 
     [self correctPositionOfAllAnnotations];
 
@@ -1661,7 +1676,10 @@
     if (self.userTrackingMode != RMUserTrackingModeNone && wasUserAction)
         self.userTrackingMode = RMUserTrackingModeNone;
     
-    [self correctPositionOfAllAnnotations];
+    //make sure this is not where we update positions during zoom out animation
+    if (!_ignoreAnimatedFirstContentSizeChange) {
+        [self correctPositionOfAllAnnotations];
+    }
 
     if (_zoom < 3 && self.userTrackingMode == RMUserTrackingModeFollowWithHeading)
         self.userTrackingMode = RMUserTrackingModeFollow;
@@ -1744,22 +1762,18 @@
     CGPoint oldContentOffset = [oldValue CGPointValue],
             newContentOffset = [newValue CGPointValue];
 
-    if (CGPointEqualToPoint(oldContentOffset, newContentOffset))
+    if (CGPointEqualToPoint(oldContentOffset, newContentOffset)
+        && _animationZoomFactor > 1) // when zooming out the oldContentOffset can be 0,0 and not change, though we still want to animate
         return;
     
-    
     CGSize newContentSize = _mapScrollView.contentSize;
-    CGSize boundsSize = self.bounds.size;
-    // The first offset during zooming out (animated) is always garbage
-    // it happens when offset.y doesn't change or when the contentSize become
-    // smaller than the view size (zooming out to world view)
+    
+    // The first offset during zooming out (animated) is sometimes garbage)
     if ( (_inFakeZoomAnimation || _mapScrollViewIsZooming) &&
         _mapScrollView.zooming == NO &&
-        _lastContentSize.width > newContentSize.width &&
-        ((newContentOffset.y - _lastContentOffset.y) == 0.0 ||
-         newContentSize.width <= boundsSize.width ||
-         newContentSize.height <= boundsSize.height))
+        _ignoreAnimatedFirstContentSizeChange)
     {
+        _ignoreAnimatedFirstContentSizeChange = NO;
         _lastContentOffset = _mapScrollView.contentOffset;
         _lastContentSize = newContentSize;
         return;
