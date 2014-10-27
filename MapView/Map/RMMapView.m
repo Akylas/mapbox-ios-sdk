@@ -1567,7 +1567,10 @@
 
     [self addGestureRecognizer:twoFingerSingleTapRecognizer];
 
-    [_visibleAnnotations removeAllObjects];
+    @synchronized (_visibleAnnotations)
+    {
+        [_visibleAnnotations removeAllObjects];
+    }
     [self correctPositionOfAllAnnotations];
 }
 
@@ -3213,10 +3216,13 @@
     {
         if (!correctAllAnnotations)
         {
-            for (RMAnnotation *annotation in _visibleAnnotations) {
-                [self correctScreenPosition:annotation animated:animated];
-                if (zoomChanging && !updateZoomOutOfTransaction) {
-                    [annotation updateForZoom:_zoom];
+            @synchronized (_visibleAnnotations)
+            {
+                for (RMAnnotation *annotation in _visibleAnnotations) {
+                    [self correctScreenPosition:annotation animated:animated];
+                    if (zoomChanging && !updateZoomOutOfTransaction) {
+                        [annotation updateForZoom:_zoom];
+                    }
                 }
             }
 
@@ -3226,8 +3232,11 @@
             
             if (zoomChanging && updateZoomOutOfTransaction) {
                 [CATransaction begin];
-                for (RMAnnotation *annotation in _visibleAnnotations) {
-                    [annotation updateForZoom:_zoom];
+                @synchronized (_visibleAnnotations)
+                {
+                    for (RMAnnotation *annotation in _visibleAnnotations) {
+                        [annotation updateForZoom:_zoom];
+                    }
                 }
                 [CATransaction commit];
             }
@@ -3248,7 +3257,11 @@
                                                          withProjectedClusterSize:RMProjectedSizeMake(self.clusterAreaSize.width * _metersPerPixel, self.clusterAreaSize.height * _metersPerPixel)
                                                     andProjectedClusterMarkerSize:RMProjectedSizeMake(self.clusterMarkerSize.width * _metersPerPixel, self.clusterMarkerSize.height * _metersPerPixel)
                                                                 findGravityCenter:self.positionClusterMarkersAtTheGravityCenter];
-        NSMutableSet *previousVisibleAnnotations = [[NSMutableSet alloc] initWithArray:_visibleAnnotations];
+        NSMutableSet *previousVisibleAnnotations;
+        @synchronized (_visibleAnnotations)
+        {
+            previousVisibleAnnotations = [[NSMutableSet alloc] initWithArray:_visibleAnnotations];
+        }
         for (RMAnnotation *annotation in annotationsToCorrect)
         {
             if (annotation.layer == nil && _delegateHasLayerForAnnotation)
@@ -3259,14 +3272,18 @@
 
             if ([annotation.layer isKindOfClass:[RMMarker class]])
                 annotation.layer.transform = _annotationTransform;
-
-            if ( ! [_visibleAnnotations containsObject:annotation])
+            
+            @synchronized (_visibleAnnotations)
             {
-                [annotation updateForZoom:_zoom];
-                [_overlayView addSublayer:annotation.layer];
-                [_visibleAnnotations addObject:annotation];
-            } else if (zoomChanging) {
-                [annotation updateForZoom:_zoom];
+                if ( ! [_visibleAnnotations containsObject:annotation])
+                {
+                    [annotation updateForZoom:_zoom];
+                    [_overlayView addSublayer:annotation.layer];
+                
+                    [_visibleAnnotations addObject:annotation];
+                } else if (zoomChanging) {
+                    [annotation updateForZoom:_zoom];
+                }
             }
 
             [self correctScreenPosition:annotation animated:animated];
@@ -3287,8 +3304,11 @@
 
                 if (_delegateHasDidHideLayerForAnnotation)
                     [_delegate mapView:self didHideLayerForAnnotation:annotation];
-
-                [_visibleAnnotations removeObject:annotation];
+                
+                @synchronized (_visibleAnnotations)
+                {
+                    [_visibleAnnotations removeObject:annotation];
+                }
             }
         }
 
@@ -3318,15 +3338,18 @@
 
                         if ([annotation.layer isKindOfClass:[RMMarker class]])
                             annotation.layer.transform = _annotationTransform;
-
-                        if (![_visibleAnnotations containsObject:annotation])
+                        
+                        @synchronized (_visibleAnnotations)
                         {
-                            if (!lastLayer)
-                                [_overlayView insertSublayer:annotation.layer atIndex:0];
-                            else
-                                [_overlayView insertSublayer:annotation.layer above:lastLayer];
-
-                            [_visibleAnnotations addObject:annotation];
+                            if (![_visibleAnnotations containsObject:annotation])
+                            {
+                                if (!lastLayer)
+                                    [_overlayView insertSublayer:annotation.layer atIndex:0];
+                                else
+                                    [_overlayView insertSublayer:annotation.layer above:lastLayer];
+                            
+                                [_visibleAnnotations addObject:annotation];
+                            }
                         }
 
                         lastLayer = annotation.layer;
@@ -3339,7 +3362,10 @@
                                 [_delegate mapView:self willHideLayerForAnnotation:annotation];
 
                             annotation.layer = nil;
-                            [_visibleAnnotations removeObject:annotation];
+                            @synchronized (_visibleAnnotations)
+                            {
+                                [_visibleAnnotations removeObject:annotation];
+                            }
 
                             if (_delegateHasDidHideLayerForAnnotation)
                                 [_delegate mapView:self didHideLayerForAnnotation:annotation];
@@ -3350,8 +3376,12 @@
             }
             else
             {
-                for (RMAnnotation *annotation in _visibleAnnotations)
-                    [self correctScreenPosition:annotation animated:animated];
+                @synchronized (_visibleAnnotations)
+                {
+                    for (RMAnnotation *annotation in _visibleAnnotations) {
+                        [self correctScreenPosition:annotation animated:animated];
+                    }
+                }
 
 //                RMLog(@"%d annotations corrected", [visibleAnnotations count]);
             }
@@ -3370,7 +3400,11 @@
 
 - (void)correctOrderingOfAllAnnotations
 {
-    NSMutableArray *sortedAnnotations = [NSMutableArray arrayWithArray:_visibleAnnotations];
+    NSMutableArray *sortedAnnotations;
+    @synchronized (_visibleAnnotations)
+    {
+        sortedAnnotations = [NSMutableArray arrayWithArray:_visibleAnnotations];
+    }
 
     NSComparator comparator;
 
@@ -3452,12 +3486,22 @@
 
 - (NSArray *)annotations
 {
-    return [NSArray arrayWithArray:_annotations];
+    NSArray* result;
+    @synchronized (_annotations)
+    {
+        result = [NSArray arrayWithArray:_annotations];
+    }
+    return result;
 }
 
 - (NSArray *)visibleAnnotations
 {
-    return [NSArray arrayWithArray:_visibleAnnotations];
+    NSArray* result;
+    @synchronized (_visibleAnnotations)
+    {
+        result = [NSArray arrayWithArray:_visibleAnnotations];
+    }
+    return result;
 }
 
 - (void)addAnnotation:(RMAnnotation *)annotation
@@ -3489,7 +3533,10 @@
         {
             [annotation updateForZoom:_zoom];
             [_overlayView addSublayer:annotation.layer];
-            [_visibleAnnotations addObject:annotation];
+            @synchronized (_visibleAnnotations)
+            {
+                [_visibleAnnotations addObject:annotation];
+            }
         }
 
         [self correctOrderingOfAllAnnotations];
@@ -3515,10 +3562,14 @@
     @synchronized (_annotations)
     {
         [_annotations removeObject:annotation];
-        [_visibleAnnotations removeObject:annotation];
-        [self.quadTree removeAnnotation:annotation];
-        annotation.layer = nil;
     }
+    @synchronized (_visibleAnnotations)
+    {
+        [_visibleAnnotations removeObject:annotation];
+    }
+    [self.quadTree removeAnnotation:annotation];
+    annotation.layer = nil;
+    
 
     [self correctPositionOfAllAnnotations];
 }
@@ -3527,16 +3578,19 @@
 {
     @synchronized (_annotations)
     {
-        for (RMAnnotation *annotation in annotationsToRemove)
+        @synchronized (_visibleAnnotations)
         {
-            if ( ! annotation.isUserLocationAnnotation)
+            for (RMAnnotation *annotation in annotationsToRemove)
             {
-                [_annotations removeObject:annotation];
-                [_visibleAnnotations removeObject:annotation];
-                [self.quadTree removeAnnotation:annotation];
-                annotation.layer = nil;
+                if ( ! annotation.isUserLocationAnnotation)
+                {
+                    [_annotations removeObject:annotation];
+                    [_visibleAnnotations removeObject:annotation];
+                    [self.quadTree removeAnnotation:annotation];
+                    annotation.layer = nil;
+                }
             }
-       }
+        }
     }
 
     [self correctPositionOfAllAnnotations];
