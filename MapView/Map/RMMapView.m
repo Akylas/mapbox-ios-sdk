@@ -3185,7 +3185,7 @@
 
 -(float)animationDuration
 {
-    return ((_animationZoomFactor > 1)?MIN(_animationZoomFactor,2):MIN(1/_animationZoomFactor,2)) * 0.15;
+    return (_animationZoomFactor == 0)?0:((_animationZoomFactor > 1)?MIN(_animationZoomFactor,2):MIN(1/_animationZoomFactor,2)) * 0.15;
 }
 
 - (void)correctPositionOfAllAnnotationsIncludingInvisibles:(BOOL)correctAllAnnotations animated:(BOOL)animated
