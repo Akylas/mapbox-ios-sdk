@@ -174,12 +174,6 @@ typedef enum : NSUInteger {
 *   @param recognizer The gesture recognizer. */
 - (void)tapOnAnnotation:(RMAnnotation *)annotation onMap:(RMMapView *)map recognizer:(UIGestureRecognizer *)recognizer;
 
-/** Tells the delegate when the user long-presses a map view.
- *   @param annotation The annotation that was tapped.
- *   @param map The map that was long-pressed.
- *   @param recognizer The gesture recognizer. */
-- (void)longPressOnAnnotation:(RMAnnotation *)annotation onMap:(RMMapView *)map recognizer:(UIGestureRecognizer*)recognizer;
-
 /** Tells the delegate when the user double-taps the layer for an annotation.
 *   @param annotation The annotation that was double-tapped.
  *   @param map The map view. *
