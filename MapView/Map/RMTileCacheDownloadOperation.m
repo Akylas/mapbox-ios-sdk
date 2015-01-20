@@ -41,7 +41,7 @@
     if (!(self = [super init]))
         return nil;
 
-    NSAssert([_source isKindOfClass:[RMAbstractWebMapSource class]], @"only web-based tile sources are supported for downloading");
+//    NSAssert([_source isKindOfClass:[RMAbstractWebMapSource class]], @"only web-based tile sources are supported for downloading");
 
     _tile   = tile;
     _source = source;
@@ -64,12 +64,8 @@
             return;
         
         UIImage* image = [_source imageForTile:_tile inCache:_cache];
-        if ( ! IS_VALID_TILE_IMAGE(image))
+        if ( ! IS_VALID_TILE_IMAGE(image)) {
             [self cancel];
-        }
-        else
-        {
-            [_cache addDiskCachedImageData:data forTile:_tile withCacheKey:[_source uniqueTilecacheKey]];
         }
     }
 }

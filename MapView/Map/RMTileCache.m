@@ -393,21 +393,20 @@
                                                ofTotalTileCount:totalTiles];
                         }
 
-                            if ([_backgroundCacheDelegate respondsToSelector:@selector(tileCache:didBackgroundCacheTile:withIndex:ofTotalTileCount:)])
-                                [_backgroundCacheDelegate tileCache:self didBackgroundCacheTile:RMTileMake((uint32_t)x, (uint32_t)y, zoom) withIndex:progTile ofTotalTileCount:totalTiles];
-							
-							if (progTile == totalTiles)
-                        	{
-                            	dispatch_async(dispatch_get_main_queue(), ^(void)
-                            	{
-                                	[weakSelf markCachingComplete];
+                        if ([_backgroundCacheDelegate respondsToSelector:@selector(tileCache:didBackgroundCacheTile:withIndex:ofTotalTileCount:)])
+                            [_backgroundCacheDelegate tileCache:self didBackgroundCacheTile:RMTileMake((uint32_t)x, (uint32_t)y, zoom) withIndex:progTile ofTotalTileCount:totalTiles];
+                        
+                        if (progTile == totalTiles)
+                        {
+                            dispatch_async(dispatch_get_main_queue(), ^(void)
+                            {
+                                [weakSelf markCachingComplete];
 
-                                	if ([_backgroundCacheDelegate respondsToSelector:@selector(tileCacheDidFinishBackgroundCache:)])
-                                	{
-                                	    [_backgroundCacheDelegate tileCacheDidFinishBackgroundCache:weakSelf];
-                                	}
-                            	});
-                       	 	}
+                                if ([_backgroundCacheDelegate respondsToSelector:@selector(tileCacheDidFinishBackgroundCache:)])
+                                {
+                                    [_backgroundCacheDelegate tileCacheDidFinishBackgroundCache:weakSelf];
+                                }
+                            });
                         }
                     }
                     else
