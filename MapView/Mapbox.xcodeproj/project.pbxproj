@@ -99,6 +99,7 @@
 		B8F3FC650EA2E792004D8F85 /* RMMarker.m in Sources */ = {isa = PBXBuildFile; fileRef = B8F3FC630EA2E792004D8F85 /* RMMarker.m */; };
 		D1437B36122869E400888DAE /* RMDBMapSource.m in Sources */ = {isa = PBXBuildFile; fileRef = D1437B32122869E400888DAE /* RMDBMapSource.m */; };
 		D1437B37122869E400888DAE /* RMDBMapSource.h in Headers */ = {isa = PBXBuildFile; fileRef = D1437B33122869E400888DAE /* RMDBMapSource.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		D5380B761A49626A004C11DF /* SMCalloutView.h in Headers */ = {isa = PBXBuildFile; fileRef = DD1E3C6C161F954F004FC649 /* SMCalloutView.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		D577FAC3191EA27B00CBEC38 /* RMStackTileSource.h in Headers */ = {isa = PBXBuildFile; fileRef = D577FAC1191EA27B00CBEC38 /* RMStackTileSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D577FAC4191EA27B00CBEC38 /* RMStackTileSource.m in Sources */ = {isa = PBXBuildFile; fileRef = D577FAC2191EA27B00CBEC38 /* RMStackTileSource.m */; };
 		DD07A23817F3AF9800E420B2 /* HeadingAngleMaskSmall.png in Resources */ = {isa = PBXBuildFile; fileRef = DD07A23217F3AF9800E420B2 /* HeadingAngleMaskSmall.png */; };
@@ -109,7 +110,6 @@
 		DD07A23D17F3AF9800E420B2 /* HeadingAngleMaskLarge@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = DD07A23717F3AF9800E420B2 /* HeadingAngleMaskLarge@2x.png */; };
 		DD1985C1165C5F6400DF667F /* RMTileMillSource.h in Headers */ = {isa = PBXBuildFile; fileRef = DD1985BF165C5F6400DF667F /* RMTileMillSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DD1985C2165C5F6400DF667F /* RMTileMillSource.m in Sources */ = {isa = PBXBuildFile; fileRef = DD1985C0165C5F6400DF667F /* RMTileMillSource.m */; };
-		DD1E3C6E161F954F004FC649 /* SMCalloutView.h in Headers */ = {isa = PBXBuildFile; fileRef = DD1E3C6C161F954F004FC649 /* SMCalloutView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DD1E3C6F161F954F004FC649 /* SMCalloutView.m in Sources */ = {isa = PBXBuildFile; fileRef = DD1E3C6D161F954F004FC649 /* SMCalloutView.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		DD280D1416EFDDD30014B549 /* examples.map-z2effxa8.json in Resources */ = {isa = PBXBuildFile; fileRef = DD280D1216EFDDD30014B549 /* examples.map-z2effxa8.json */; };
 		DD2B375514CF8197008DE8CB /* RMMBTilesSource.h in Headers */ = {isa = PBXBuildFile; fileRef = DD2B375314CF8197008DE8CB /* RMMBTilesSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -133,7 +133,7 @@
 		DD56B9571961E23F00706C67 /* FMDB.h in Headers */ = {isa = PBXBuildFile; fileRef = DD56B94C1961E23F00706C67 /* FMDB.h */; };
 		DD56B9581961E23F00706C67 /* FMResultSet.h in Headers */ = {isa = PBXBuildFile; fileRef = DD56B94D1961E23F00706C67 /* FMResultSet.h */; };
 		DD56B9591961E23F00706C67 /* FMResultSet.m in Sources */ = {isa = PBXBuildFile; fileRef = DD56B94E1961E23F00706C67 /* FMResultSet.m */; };
-		DD5F5F9518C7C03C0085DE98 /* SMClassicCalloutView.h in Headers */ = {isa = PBXBuildFile; fileRef = DD5F5F9318C7C03C0085DE98 /* SMClassicCalloutView.h */; };
+		DD5F5F9518C7C03C0085DE98 /* SMClassicCalloutView.h in Headers */ = {isa = PBXBuildFile; fileRef = DD5F5F9318C7C03C0085DE98 /* SMClassicCalloutView.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		DD5F5F9618C7C03C0085DE98 /* SMClassicCalloutView.m in Sources */ = {isa = PBXBuildFile; fileRef = DD5F5F9418C7C03C0085DE98 /* SMClassicCalloutView.m */; };
 		DD5FA1EB15E2B020004EB6C5 /* RMLoadingTileView.h in Headers */ = {isa = PBXBuildFile; fileRef = DD5FA1E915E2B020004EB6C5 /* RMLoadingTileView.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		DD5FA1EC15E2B020004EB6C5 /* RMLoadingTileView.m in Sources */ = {isa = PBXBuildFile; fileRef = DD5FA1EA15E2B020004EB6C5 /* RMLoadingTileView.m */; };
@@ -811,7 +811,6 @@
 				DDE357F816522CD8001DB842 /* RMPolygonAnnotation.h in Headers */,
 				DD1985C1165C5F6400DF667F /* RMTileMillSource.h in Headers */,
 				DD63176317D15EB5008CA79B /* RMCircleAnnotation.h in Headers */,
-				DD1E3C6E161F954F004FC649 /* SMCalloutView.h in Headers */,
 				DD63175F17D1506D008CA79B /* RMGreatCircleAnnotation.h in Headers */,
 				B8C974220E8A19B2007D16AD /* RMProjection.h in Headers */,
 				B8C974260E8A19B2007D16AD /* RMTile.h in Headers */,
@@ -821,7 +820,6 @@
 				23A0AAEB0EB90AA6003A4521 /* RMFoundation.h in Headers */,
 				96492C400FA8AD3400EBA6D2 /* RMGlobalConstants.h in Headers */,
 				B1EB26C610B5D8E6009F8658 /* RMNotifications.h in Headers */,
-				DD5F5F9518C7C03C0085DE98 /* SMClassicCalloutView.h in Headers */,
 				D1437B37122869E400888DAE /* RMDBMapSource.h in Headers */,
 				1606C9FE13D86BA400547581 /* RMOpenCycleMapSource.h in Headers */,
 				16FAB66413E03D55002F4E1C /* RMQuadTree.h in Headers */,
@@ -832,6 +830,8 @@
 				16FFF2CB14E3DBF700A170EC /* RMMapQuestOpenAerialSource.h in Headers */,
 				DD3BEF7915913C55007892D8 /* RMAttributionViewController.h in Headers */,
 				16F3581B15864135003A3AD9 /* RMMapScrollView.h in Headers */,
+				D5380B761A49626A004C11DF /* SMCalloutView.h in Headers */,
+				DD5F5F9518C7C03C0085DE98 /* SMClassicCalloutView.h in Headers */,
 				16FBF07615936BF1004ECAD1 /* RMTileSourcesContainer.h in Headers */,
 				DD56B9531961E23F00706C67 /* FMDatabasePool.h in Headers */,
 				161E563A1594664E00B00BB6 /* RMOpenSeaMapLayer.h in Headers */,
@@ -840,7 +840,6 @@
 				DD41960116250ED40049E6BA /* RMTileCacheDownloadOperation.h in Headers */,
 				DD4195C9162356900049E6BA /* RMBingSource.h in Headers */,
 				DD56B9571961E23F00706C67 /* FMDB.h in Headers */,
-				DD1E3C6E161F954F004FC649 /* SMCalloutView.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -888,7 +887,7 @@
 		29B97313FDCFA39411CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0500;
+				LastUpgradeCheck = 0610;
 			};
 			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "Mapbox" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -1162,6 +1161,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 5.1;
+				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "";
 				RUN_CLANG_STATIC_ANALYZER = NO;
 				SDKROOT = iphoneos;
