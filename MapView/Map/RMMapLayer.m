@@ -95,9 +95,7 @@
 
 - (void)setPosition:(CGPoint)position animated:(BOOL)animated
 {
-    if ( ! [[NSDecimalNumber notANumber] isEqualToNumber:@(position.x)] &&
-        ! [[NSDecimalNumber notANumber] isEqualToNumber:@(position.y)])
-    {
+    if (RMIsPointAPoint(position)) {
         [self setPosition:position];
     }
 }

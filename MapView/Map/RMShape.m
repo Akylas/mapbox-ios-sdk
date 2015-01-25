@@ -169,8 +169,11 @@ RMProjectedRect RMProjectedRectFromPoints(RMProjectedPoint p1, RMProjectedPoint 
 {
     if (ignorePathUpdates)
         return;
-
-    float scale = 1.0f / [mapView metersPerPixel];
+    double metersPerPixel = [mapView metersPerPixel];
+    if (metersPerPixel == 0.0f) {
+        return;
+    }
+    float scale = 1.0f / metersPerPixel;
 
     // we have to calculate the scaledLineWidth even if scalling did not change
     // as the lineWidth might have changed
@@ -243,8 +246,7 @@ RMProjectedRect RMProjectedRectFromPoints(RMProjectedPoint p1, RMProjectedPoint 
             lastScale = scale;
             // calculate the bounds of the scaled path
             CGRect boundsInMercators = scaledPath.bounds;
-            if (RMIsInf(boundsInMercators.origin.x) || RMIsInf(boundsInMercators.origin.y) ||
-                RMIsNAN(boundsInMercators.origin.x) || RMIsNAN(boundsInMercators.origin.y) ||
+            if (!RMIsPointAPoint(boundsInMercators.origin) ||
                 CGRectIsInfinite(boundsInMercators)) {
                 boundsInMercators = CGRectZero;
             }
@@ -722,9 +724,9 @@ RMProjectedRect RMProjectedRectFromPoints(RMProjectedPoint p1, RMProjectedPoint 
 
 - (void)setPosition:(CGPoint)newPosition animated:(BOOL)animated
 {
-    if (CGPointEqualToPoint(newPosition, super.position) && CGRectEqualToRect(self.bounds, previousBounds))
+    if (CGPointEqualToPoint(newPosition, self.position) && CGRectEqualToRect(self.bounds, previousBounds))
         return;
-
+    [super setPosition:newPosition animated:animated];
     [self recalculateGeometryAnimated:animated];
 }
 

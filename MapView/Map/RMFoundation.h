@@ -130,4 +130,6 @@ void RMLogProjectedRect(RMProjectedRect rect);
 #define RMIsNAN(n) (fpclassify(n) == FP_NAN)
 #define RMIsInf(n) (fpclassify(n) == FP_INFINITE)
 
+#define RMIsPointAPoint(p)  (!RMIsNAN(p.x) && !RMIsNAN(p.y) && !RMIsInf(p.x) && !RMIsInf(p.y))
+
 #endif

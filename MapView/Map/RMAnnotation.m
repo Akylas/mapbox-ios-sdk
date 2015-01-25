@@ -141,12 +141,12 @@
 
 - (void)setPosition:(CGPoint)aPosition animated:(BOOL)animated
 {
-    position = aPosition;
     if (layer &&
-        //         !isnan(aPosition.x) && !isnan(aPosition.y) && //already checked in RMMapLayer
-        !RMIsInf(aPosition.x) && !RMIsInf(aPosition.y)) {
+        RMIsPointAPoint(aPosition)) {
+        position = aPosition;
         [layer setPosition:aPosition animated:animated];
     }
+    
 }
 
 - (void)setPosition:(CGPoint)aPosition

@@ -35,12 +35,7 @@
 
 - (void)setContentOffset:(CGPoint)contentOffset
 {
-    
-
-    if (!RMIsNAN(contentOffset.x) &&
-        !RMIsNAN(contentOffset.y) &&
-        !RMIsInf(contentOffset.x) &&
-        !RMIsInf(contentOffset.y))
+    if (RMIsPointAPoint(contentOffset))
     {
         if (self.mapScrollViewDelegate)
             [self.mapScrollViewDelegate scrollView:self correctedContentOffset:&contentOffset];
@@ -52,10 +47,7 @@
 {
     
 
-    if (!RMIsNAN(contentOffset.x) &&
-        !RMIsNAN(contentOffset.y) &&
-        !RMIsInf(contentOffset.x) &&
-        !RMIsInf(contentOffset.y))
+    if (RMIsPointAPoint(contentOffset))
     {
         if (self.mapScrollViewDelegate)
             [self.mapScrollViewDelegate scrollView:self correctedContentOffset:&contentOffset];
