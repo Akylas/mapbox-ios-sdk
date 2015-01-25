@@ -231,11 +231,13 @@
     float _initialTileSourceZoomLevel;
     float _initialTileSourceMaxZoomLevel;
     float _initialTileSourceMinZoomLevel;
+    RMProjectedPoint _initialCenterProjectedPoint;
     
     BOOL _userLocationZoomBasedOnAccuracy;
     float _userLocationRequiredZoom;
     
     BOOL _forceUpdate;
+    BOOL _readyToSetProjectedBounds;
 }
 
 @synthesize decelerationMode = _decelerationMode;
@@ -303,6 +305,7 @@
     _constraintRegionFit = YES;
 
     _orderClusterMarkersAboveOthers = YES;
+    _readyToSetProjectedBounds = NO;
     
     _aboutToStartZoomAnimation = _inFakeZoomAnimation = NO;
     _ignoreAnimatedFirstContentSizeChange = NO;
@@ -467,6 +470,11 @@
     [self setFrame:frame animated:NO];
 }
 
+-(BOOL)readyToSetProjectedBounds
+{
+    return _readyToSetProjectedBounds;
+}
+
 - (void)setFrame:(CGRect)frame animated:(BOOL)animated
 {
     CGRect r = self.frame;
@@ -477,7 +485,12 @@
     // only change if the frame changes and not during initialization
     if ( ! CGRectEqualToRect(r, frame))
     {
-        RMProjectedPoint centerPoint = self.centerProjectedPoint;
+        BOOL wasEmptyRect = CGRectIsEmpty(r);
+        if (!_readyToSetProjectedBounds) {
+            _readyToSetProjectedBounds = wasEmptyRect;
+        }
+        //handle case where centerProjectedPoint was set with a 0,0 frame
+        RMProjectedPoint centerPoint = wasEmptyRect?_initialCenterProjectedPoint:self.centerProjectedPoint;
         
         CGRect bounds = CGRectMake(0, 0, frame.size.width, frame.size.height);
         _backgroundView.frame = bounds;
@@ -1012,9 +1025,11 @@
 
     _tilesConstrainingBox = bounds;
     _constrainingBox = RMSphericalTrapeziumIntersection(_tilesConstrainingBox, _userConstrainingBox);
-    RMProjectedRect projection = [self projectedBounds];
-    [self updateConstrainingProjectedBounds];
-    [self setProjectedBounds:projection];
+    if ([self readyToSetProjectedBounds]) {
+        RMProjectedRect projection = [self projectedBounds];
+        [self updateConstrainingProjectedBounds];
+        [self setProjectedBounds:projection];
+    }
 }
 
 #pragma mark -
@@ -1069,7 +1084,10 @@
 {
     if (!_forceUpdate && RMProjectedPointEqualToProjectedPoint(centerProjectedPoint, [self centerProjectedPoint]))
         return;
-
+    if (CGRectIsEmpty(self.bounds)) {
+        _initialCenterProjectedPoint = centerProjectedPoint;
+        return;
+    }
     [self registerMoveEventByUser:NO];
 
 //    RMLog(@"Current contentSize: {%.0f,%.0f}, zoom: %f", mapScrollView.contentSize.width, mapScrollView.contentSize.height, self.zoom);
@@ -1838,7 +1856,6 @@
         [self onRegionChange];
     }
     
-    CGRect frame = self.frame;
 
     _lastContentOffset = newContentOffset;
     _lastContentSize = newContentSize;
