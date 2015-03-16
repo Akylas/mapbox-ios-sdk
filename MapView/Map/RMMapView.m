@@ -1930,7 +1930,7 @@
 
 - (void)doubleTapWithGesture:(UIGestureRecognizer *)recognizer
 {
-    if (self.zoom < floorf(self.maxZoom))
+    if (self.zoom < self.maxZoom)
     {
         [self registerZoomEventByUser:YES];
         CGPoint aPoint = [recognizer locationInView:self];
