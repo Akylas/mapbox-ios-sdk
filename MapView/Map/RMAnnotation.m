@@ -141,12 +141,12 @@
 
 - (void)setPosition:(CGPoint)aPosition animated:(BOOL)animated
 {
-    if (layer &&
-        RMIsPointAPoint(aPosition)) {
+    if (RMIsPointAPoint(aPosition)) {
         position = aPosition;
-        [layer setPosition:aPosition animated:animated];
+        if (layer) {
+            [layer setPosition:aPosition animated:animated];
+        }
     }
-    
 }
 
 - (void)setPosition:(CGPoint)aPosition
