@@ -298,7 +298,8 @@
                                                    cachedImage.size.height * cropSize);
                     
                     CGImageRef imageRef = CGImageCreateWithImageInRect([cachedImage CGImage], cropBounds);
-                    return [UIImage imageWithCGImage:imageRef];
+                    cachedImage = [UIImage imageWithCGImage:imageRef];
+//                    return [UIImage imageWithCGImage:imageRef];
                     CGImageRelease(imageRef);
                     return cachedImage;
                 }
