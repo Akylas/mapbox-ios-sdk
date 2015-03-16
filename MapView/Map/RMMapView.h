@@ -229,6 +229,7 @@ typedef enum : NSUInteger {
 
 // recenter the map on #boundsRect, expressed in projected meters
 - (void)setProjectedBounds:(RMProjectedRect)boundsRect animated:(BOOL)animated;
+- (void)setProjectedBounds:(RMProjectedRect)boundsRect animated:(BOOL)animated roundOutZoom:(BOOL)shouldRound;
 
 /** Set zoom level, optionally with an animation. 
 *   @param newZoom The desired zoom level.
@@ -257,6 +258,8 @@ typedef enum : NSUInteger {
 *   @param animated Whether to animate the zoom. */
 - (void)zoomOutToNextNativeZoomAt:(CGPoint)pivot animated:(BOOL)animated;
 
+
+- (void)zoomWithLatitudeLongitudeBoundsSouthWest:(CLLocationCoordinate2D)southWest northEast:(CLLocationCoordinate2D)northEast regionFit:(BOOL)regionFit animated:(BOOL)animated roundOutZoom:(BOOL)roundOut;
 
 /** Zoom the map to a given latitude and longitude bounds.
  *   @param southWest The southwest point to zoom to.
@@ -345,6 +348,7 @@ typedef enum : NSUInteger {
 
 /** Remove all annotations from the map. This does not remove user location annotations, if any. */
 - (void)removeAllAnnotations;
+- (void)removeAllAnnotationsOfClass:(Class)c;
 
 /** The relative map position for a given annotation. 
 *   @param annotation The annotation for which to return the current position.

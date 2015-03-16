@@ -1168,6 +1168,11 @@
 
 - (void)setProjectedBounds:(RMProjectedRect)boundsRect animated:(BOOL)animated
 {
+    [self setProjectedBounds:boundsRect animated:animated roundOutZoom:YES];
+}
+
+- (void)setProjectedBounds:(RMProjectedRect)boundsRect animated:(BOOL)animated roundOutZoom:(BOOL)shouldRound
+{
     if (!_forceUpdate && RMProjectedRectEqualToProjectedRect(boundsRect, [self projectedBounds]))
         return;
     
@@ -1188,7 +1193,15 @@
                                  (boundsRect.size.height / _metersPerPixel) / zoomScale);
     float newZoomFactor = _mapScrollView.bounds.size.width /(zoomRect.size.width * zoomScale);
     
-//    float newZoom = log2f(newZoomFactor) + currentZoom;
+    if (shouldRound) {
+        float newZoom = log2f(newZoomFactor) + currentZoom;
+        newZoom = floorf(newZoom);
+        newZoomFactor = exp2f(newZoom - currentZoom);
+        float factor = _mapScrollView.bounds.size.width /(newZoomFactor * zoomScale) / zoomRect.size.width;
+        float newWidth = zoomRect.size.width * factor;
+        float newHeight = zoomRect.size.height * factor;
+        zoomRect = CGRectMake(CGRectGetMidX(zoomRect) - newWidth / 2, CGRectGetMidY(zoomRect) - newHeight / 2, newWidth, newHeight);
+    }
     _animationZoomFactor = animated?newZoomFactor:0;
     _aboutToStartZoomAnimation = animated;
     [self zoomToRect:zoomRect duration:[self animationDuration]];
@@ -1321,13 +1334,14 @@
                                      newZoomSize.width / zoomScale,
                                      newZoomSize.height / zoomScale);
         _animationZoomFactor = zoomFactor;
+        _aboutToStartZoomAnimation = animated;
         
         // in some cases we will get a garbage change of ContentSize
         // this is where we try to "discover" it
         _ignoreAnimatedFirstContentSizeChange = animated && _animationZoomFactor < 1
             && _lastContentOffset.y != 0 && _lastContentOffset.x != 0
             && _lastContentOffset.x != (_lastContentSize.width - currentSize.width);
-        [_mapScrollView zoomToRect:zoomRect animated:animated];
+        [self zoomToRect:zoomRect duration:[self animationDuration]];
     }
     else
     {
@@ -1404,6 +1418,11 @@
 
 - (void)zoomWithLatitudeLongitudeBoundsSouthWest:(CLLocationCoordinate2D)southWest northEast:(CLLocationCoordinate2D)northEast regionFit:(BOOL)regionFit animated:(BOOL)animated
 {
+    [self zoomWithLatitudeLongitudeBoundsSouthWest:southWest northEast:northEast regionFit:regionFit animated:animated roundOutZoom:NO];
+}
+
+- (void)zoomWithLatitudeLongitudeBoundsSouthWest:(CLLocationCoordinate2D)southWest northEast:(CLLocationCoordinate2D)northEast regionFit:(BOOL)regionFit animated:(BOOL)animated roundOutZoom:(BOOL)roundOut
+{
     if (northEast.latitude == southWest.latitude && northEast.longitude == southWest.longitude) // There are no bounds, probably only one marker.
     {
         RMProjectedRect zoomRect;
@@ -1416,7 +1435,7 @@
         myOrigin.y = myOrigin.y - (zoomRect.size.height / 2.0);
         zoomRect.origin = myOrigin;
 
-        [self setProjectedBounds:zoomRect animated:animated];
+        [self setProjectedBounds:zoomRect animated:animated roundOutZoom:roundOut];
     }
     else
     {
@@ -1444,9 +1463,9 @@
         float ratioX = myPoint.x / self.bounds.size.width;
         float ratioY = myPoint.y / self.bounds.size.height;
         
-        BOOL ratioTest = regionFit?(ratioX < ratioY):(ratioX > ratioY);
+        BOOL regionFitRatio = regionFit?(ratioX < ratioY):(ratioX > ratioY);
 
-        if (ratioTest)
+        if (regionFitRatio)
         {
             if (ratioY > 1)
             {
@@ -1454,20 +1473,17 @@
                 zoomRect.size.height = self.bounds.size.height * ratioY;
             }
         }
-        else
+        else if (ratioX > 1)
         {
-            if (ratioX > 1)
-            {
-                zoomRect.size.width = self.bounds.size.width * ratioX;
-                zoomRect.size.height = self.bounds.size.height * ratioX;
-            }
+            zoomRect.size.width = self.bounds.size.width * ratioX;
+            zoomRect.size.height = self.bounds.size.height * ratioX;
         }
 
         myOrigin.x = myOrigin.x - (zoomRect.size.width / 2);
         myOrigin.y = myOrigin.y - (zoomRect.size.height / 2);
         zoomRect.origin = myOrigin;
 
-        [self setProjectedBounds:zoomRect animated:animated];
+        [self setProjectedBounds:zoomRect animated:animated roundOutZoom:roundOut];
     }
 }
 
@@ -1794,7 +1810,7 @@
             newContentOffset = [newValue CGPointValue];
 
     if (CGPointEqualToPoint(oldContentOffset, newContentOffset)
-        && _animationZoomFactor > 1) // when zooming out the oldContentOffset can be 0,0 and not change, though we still want to animate
+        && _animationZoomFactor > 0) // when zooming out the oldContentOffset can be 0,0 and not change, though we still want to animate
         return;
     
     CGSize newContentSize = _mapScrollView.contentSize;
@@ -1845,7 +1861,7 @@
         else
         {
             if (_aboutToStartZoomAnimation || _mapScrollViewIsZooming)
-                [self correctPositionOfAllAnnotationsIncludingInvisibles:NO animated:YES];
+                [self correctPositionOfAllAnnotationsIncludingInvisibles:NO animated:_aboutToStartZoomAnimation || (_mapScrollViewIsZooming && !_mapScrollView.zooming)];
             else
                 [self correctPositionOfAllAnnotations];
         }
@@ -3325,6 +3341,7 @@
             {
                 if ( ! [_visibleAnnotations containsObject:annotation])
                 {
+                    [self correctScreenPosition:annotation animated:animated];
                     [annotation updateForZoom:_zoom];
                     [_overlayView addSublayer:annotation.layer];
                 
