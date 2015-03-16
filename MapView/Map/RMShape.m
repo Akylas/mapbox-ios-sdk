@@ -726,7 +726,7 @@ RMProjectedRect RMProjectedRectFromPoints(RMProjectedPoint p1, RMProjectedPoint 
 {
     if (CGPointEqualToPoint(newPosition, self.position) && CGRectEqualToRect(self.bounds, previousBounds))
         return;
-    [super setPosition:newPosition animated:animated];
+//    [super setPosition:newPosition animated:animated];
     [self recalculateGeometryAnimated:animated];
 }
 
