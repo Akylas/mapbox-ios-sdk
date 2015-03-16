@@ -238,6 +238,9 @@
     
     BOOL _forceUpdate;
     BOOL _readyToSetProjectedBounds;
+    
+    BOOL _mapMinZoomDefined;
+    BOOL _mapMaxZoomDefined;
 }
 
 @synthesize decelerationMode = _decelerationMode;
@@ -306,6 +309,9 @@
 
     _orderClusterMarkersAboveOthers = YES;
     _readyToSetProjectedBounds = NO;
+    
+    _mapMinZoomDefined = NO;
+    _mapMaxZoomDefined = NO;
     
     _aboutToStartZoomAnimation = _inFakeZoomAnimation = NO;
     _ignoreAnimatedFirstContentSizeChange = NO;
@@ -2713,13 +2719,16 @@
     return ((_metersPerPixel * 1000.0) / iphoneMillimetersPerPixel);
 }
 
-- (void)setMinZoom:(float)newMinZoom
+- (void)setMinZoom:(float)newMinZoom adjustForRetina:(BOOL)adjust
 {
     float boundingDimension = fmaxf(self.bounds.size.width, self.bounds.size.height);
     float tileSideLength    = _tileSourcesContainer.tileSideLength;
     if (tileSideLength == 0) return;
     float clampedMinZoom    = log2(boundingDimension / tileSideLength);
-
+    
+    if (adjust && !self.adjustTilesForRetinaDisplay && _screenScale > 1.0)
+        newMinZoom -= 1.0;
+    
     if (newMinZoom < clampedMinZoom)
         newMinZoom = clampedMinZoom;
 
@@ -2733,6 +2742,12 @@
     _mapScrollView.minimumZoomScale = exp2f(newMinZoom);
 }
 
+- (void)setMinZoom:(float)newMinZoom
+{
+    _mapMinZoomDefined = YES;
+    [self setMinZoom:newMinZoom adjustForRetina:YES];
+}
+
 - (float)tileSourcesMinZoom
 {
     return self.tileSourcesContainer.minZoom;
@@ -2740,25 +2755,34 @@
 
 - (void)setTileSourcesMinZoom:(float)tileSourcesMinZoom
 {
+    if (_mapMinZoomDefined) {
+        return;
+    }
     tileSourcesMinZoom = ceilf(tileSourcesMinZoom) - 0.99;
 
     if ( ! self.adjustTilesForRetinaDisplay && _screenScale > 1.0 && ! [RMMapboxSource isUsingLargeTiles])
         tileSourcesMinZoom -= 1.0;
 
-    [self setMinZoom:tileSourcesMinZoom];
+    [self setMinZoom:tileSourcesMinZoom adjustForRetina:NO];
 }
 
 - (void)setMaxZoom:(float)newMaxZoom
 {
+    _mapMaxZoomDefined = YES;
+    [self setMaxZoom:newMaxZoom adjustForRetina:YES];
+}
+
+- (void)setMaxZoom:(float)newMaxZoom adjustForRetina:(BOOL)adjust
+{
     if (newMaxZoom < 0.0)
         newMaxZoom = 0.0;
     
-    if ( ! self.adjustTilesForRetinaDisplay && _screenScale > 1.0)
+    if (adjust && !self.adjustTilesForRetinaDisplay && _screenScale > 1.0)
         newMaxZoom -= 1.0;
     _maxZoom = newMaxZoom;
-
-//    RMLog(@"New maxZoom:%f", newMaxZoom);
-
+    
+    //    RMLog(@"New maxZoom:%f", newMaxZoom);
+    
     _mapScrollView.maximumZoomScale = exp2f(newMaxZoom);
 }
 
@@ -2769,12 +2793,15 @@
 
 - (void)setTileSourcesMaxZoom:(float)tileSourcesMaxZoom
 {
+    if (_mapMaxZoomDefined) {
+        return;
+    }
     tileSourcesMaxZoom = floorf(tileSourcesMaxZoom);
 
     if ( ! self.adjustTilesForRetinaDisplay && _screenScale > 1.0 && ! [RMMapboxSource isUsingLargeTiles])
         tileSourcesMaxZoom -= 1.0;
-
-    [self setMaxZoom:tileSourcesMaxZoom];
+    
+    [self setMaxZoom:tileSourcesMaxZoom adjustForRetina:NO];
 }
 
 -(BOOL)isZooming
