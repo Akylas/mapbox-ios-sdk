@@ -3542,6 +3542,18 @@
     return result;
 }
 
+-(NSArray*)annotationsOfClass:(Class)c
+{
+    NSArray* result;
+    @synchronized (_annotations)
+    {
+        result = [_annotations filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(id object, NSDictionary *bindings) {
+            return [object isKindOfClass:c];
+        }]];
+    }
+    return result;
+}
+
 - (NSArray *)visibleAnnotations
 {
     NSArray* result;
@@ -3646,7 +3658,12 @@
 
 - (void)removeAllAnnotations
 {
-    [self removeAnnotations:[_annotations copy]];
+    [self removeAnnotations:[self annotations]];
+}
+
+- (void)removeAllAnnotationsOfClass:(Class)c
+{
+    [self removeAnnotations:[self annotationsOfClass:c]];
 }
 
 - (CGPoint)mapPositionForAnnotation:(RMAnnotation *)annotation
