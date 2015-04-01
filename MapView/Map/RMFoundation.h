@@ -56,15 +56,42 @@ typedef struct {
 #ifdef __OBJC__
 /*! \struct RMSphericalTrapezium
  \brief a rectangle, specified by two corner coordinates */
-typedef struct {
-	CLLocationCoordinate2D southWest;
-	CLLocationCoordinate2D northEast;
+//typedef struct {
+//	CLLocationCoordinate2D southWest;
+//	CLLocationCoordinate2D northEast;
+//} RMSphericalTrapezium;
+
+typedef struct
+{
+    CLLocationCoordinate2D southWest;
+    CLLocationCoordinate2D northEast;
 } RMSphericalTrapezium;
+
+RMSphericalTrapezium const kRMSphericalTrapeziumInvalid;
+
+static inline BOOL RMSphericalTrapeziumIsValid(RMSphericalTrapezium box){
+    return CLLocationCoordinate2DIsValid(box.southWest) &&
+    CLLocationCoordinate2DIsValid(box.northEast);
+}
+
+
 static inline RMSphericalTrapezium RMSphericalTrapeziumIntersection(RMSphericalTrapezium box1, RMSphericalTrapezium box2){
     return ((RMSphericalTrapezium) {
         .northEast = {
             .latitude = MIN(box1.northEast.latitude, box2.northEast.latitude),
             .longitude = MIN(box1.northEast.longitude, box2.northEast.longitude)},
+        .southWest = {
+            .latitude = MAX(box1.southWest.latitude, box2.southWest.latitude),
+            .longitude = MAX(box1.southWest.longitude, box2.southWest.longitude)
+        }
+    });
+}
+
+static inline RMSphericalTrapezium RMSphericalTrapeziumUnion(RMSphericalTrapezium box1, RMSphericalTrapezium box2){
+    return ((RMSphericalTrapezium) {
+        .northEast = {
+            .latitude = MAX(box1.northEast.latitude, box2.northEast.latitude),
+            .longitude = MAX(box1.northEast.longitude, box2.northEast.longitude)},
         .southWest = {
             .latitude = MAX(box1.southWest.latitude, box2.southWest.latitude),
             .longitude = MAX(box1.southWest.longitude, box2.southWest.longitude)

@@ -29,6 +29,15 @@
 #import <math.h>
 #import <stdio.h>
 
+
+#ifdef __OBJC__
+RMSphericalTrapezium const kRMSphericalTrapeziumInvalid = {
+    .southWest = kCLLocationCoordinate2DInvalid,
+    .northEast = kCLLocationCoordinate2DInvalid
+};
+#endif
+
+
 bool RMProjectedPointEqualToProjectedPoint(RMProjectedPoint point1, RMProjectedPoint point2)
 {
 	return point1.x == point2.x && point1.y == point2.y;
