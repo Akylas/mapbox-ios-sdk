@@ -42,6 +42,8 @@
 /** The network timeout for each attempt to download a tile image. */
 @property (nonatomic, assign) NSTimeInterval requestTimeoutSeconds;
 
+@property (nonatomic, readwrite, copy) NSString* userAgent;
+
 /** @name Providing Tile Images */
 
 /** Provide the URL for a given tile.

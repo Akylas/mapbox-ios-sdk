@@ -37,8 +37,6 @@ static RMConfiguration *RMConfigurationSharedInstance = nil;
                                                               cachePolicy:request.cachePolicy
                                                           timeoutInterval:request.timeoutInterval];
 
-    [newRequest setValue:[[RMConfiguration configuration] userAgent] forHTTPHeaderField:@"User-Agent"];
-
     return [NSURLConnection sendSynchronousRequest:newRequest returningResponse:response error:error];
 }
 

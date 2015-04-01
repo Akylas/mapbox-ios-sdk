@@ -43,7 +43,7 @@
 {
     if (!(self = [super init]))
         return nil;
-
+    self.userAgent = [[RMConfiguration configuration] userAgent];
     self.retryCount = RMAbstractWebMapSourceDefaultRetryCount;
     self.requestTimeoutSeconds = RMAbstractWebMapSourceDefaultWaitSeconds;
     _queue = dispatch_queue_create(nil, DISPATCH_QUEUE_CONCURRENT);
@@ -115,6 +115,9 @@
                     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:currentURL];
                     [request setCachePolicy:NSURLRequestReloadIgnoringLocalCacheData];
                     [request setTimeoutInterval:(self.requestTimeoutSeconds / (CGFloat)self.retryCount)];
+                    if (self.userAgent) {
+                        [request setValue:self.userAgent forHTTPHeaderField:@"User-Agent"];
+                    }
                     tileData = [NSURLConnection sendBrandedSynchronousRequest:request returningResponse:nil error:nil];
                 }
 
