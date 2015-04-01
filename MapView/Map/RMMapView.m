@@ -1872,7 +1872,7 @@
     }
     else
     {
-        [self correctPositionOfAllAnnotationsIncludingInvisibles:NO animated:_aboutToStartZoomAnimation || (_mapScrollViewIsZooming && !_mapScrollView.zooming)];
+        [self correctPositionOfAllAnnotationsIncludingInvisibles:YES animated:_aboutToStartZoomAnimation || (_mapScrollViewIsZooming && !_mapScrollView.zooming)];
 
         _lastZoom = _zoom;
         [self onRegionChange];
