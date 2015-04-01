@@ -231,6 +231,7 @@
     RMProjectedPoint second = [[mapView projection] coordinateToProjectedPoint:northEast];
     self.projectedBoundingBox = RMProjectedRectMake(first.x, first.y, second.x - first.x, second.y - first.y);
     self.hasBoundingBox = YES;
+    [self.quadTreeNode performSelector:@selector(annotationDidChangeBoundingBox:) withObject:self];
 }
 
 - (void)setBoundingBoxFromLocations:(NSArray *)locations
