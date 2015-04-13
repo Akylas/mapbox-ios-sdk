@@ -118,7 +118,7 @@
                     if (self.userAgent) {
                         [request setValue:self.userAgent forHTTPHeaderField:@"User-Agent"];
                     }
-                    tileData = [NSURLConnection sendBrandedSynchronousRequest:request returningResponse:nil error:nil];
+                    tileData = [NSURLConnection sendSynchronousRequest:request returningResponse:nil error:nil];
                 }
 
                 if (tileData)
@@ -170,7 +170,10 @@
             NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[URLs objectAtIndex:0]];
             [request setCachePolicy:NSURLRequestReloadIgnoringLocalCacheData];
             [request setTimeoutInterval:(self.requestTimeoutSeconds / (CGFloat)self.retryCount)];
-            image = [UIImage imageWithData:[NSURLConnection sendBrandedSynchronousRequest:request returningResponse:&response error:nil]];
+            if (self.userAgent) {
+                [request setValue:self.userAgent forHTTPHeaderField:@"User-Agent"];
+            }
+            image = [UIImage imageWithData:[NSURLConnection sendSynchronousRequest:request returningResponse:&response error:nil]];
             
             if (image || response.statusCode == HTTP_404_NOT_FOUND)
                 break;
