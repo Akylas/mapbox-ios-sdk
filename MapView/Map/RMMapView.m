@@ -528,14 +528,16 @@
     return [UIImage imageWithContentsOfFile:[[self class] pathForBundleResourceNamed:imageName ofType:nil]];
 }
 
+static NSBundle* sResourceBundle;
 + (NSString *)pathForBundleResourceNamed:(NSString *)name ofType:(NSString *)extension
 {
-    NSAssert([[NSBundle mainBundle] pathForResource:@"Mapbox" ofType:@"bundle"], @"Resource bundle not found in application.");
-
-    NSString *bundlePath      = [[NSBundle mainBundle] pathForResource:@"Mapbox" ofType:@"bundle"];
-    NSBundle *resourcesBundle = [NSBundle bundleWithPath:bundlePath];
-
-    return [resourcesBundle pathForResource:name ofType:extension];
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        NSString *bundlePath      = [[NSBundle mainBundle] pathForResource:@"Mapbox" ofType:@"bundle"];
+        NSAssert(bundlePath, @"Resource bundle not found in application.");
+        sResourceBundle = [NSBundle bundleWithPath:bundlePath];
+    });
+    return [sResourceBundle pathForResource:name ofType:extension];
 }
 
 - (void)dealloc
