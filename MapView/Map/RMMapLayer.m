@@ -30,7 +30,7 @@
 #import "RMAnnotation.h"
 #import "RMMapView.h"
 #import "RMMarker.h"
-#import "SMCalloutView/SMCalloutView.h"
+#import "SMCalloutView.h"
 
 @interface RMMapView (PrivateMethods)
 
@@ -63,7 +63,7 @@
 
     self.annotation = nil;
     self.calloutOffset = CGPointZero;
-    self.calloutPadding = [SMCalloutView calloutDefaultPadding];
+    self.calloutPadding = [SMCalloutView defaultContentInset];
     self.calloutCornerRadius = [SMCalloutView calloutDefaultCornerRadius];
     self.calloutArrowHeight = [SMCalloutView calloutDefaultArrowHeight];
 

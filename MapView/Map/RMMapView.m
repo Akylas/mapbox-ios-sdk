@@ -2190,7 +2190,7 @@
                 _currentCallout.leftAccessoryView = nil;
                 _currentCallout.rightAccessoryView = nil;
                 _currentCallout.contentView = nil;
-                _currentCallout.padding = anAnnotation.layer.calloutPadding;
+                _currentCallout.contentViewInset = anAnnotation.layer.calloutPadding;
                 SMCalloutMaskedBackgroundView* backView = (SMCalloutMaskedBackgroundView*)_currentCallout.backgroundView;
                 if (backView && [backView isKindOfClass:[SMCalloutMaskedBackgroundView class]]) {
                     backView.backgroundColor = anAnnotation.layer.calloutBackgroundColor;
